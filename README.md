@@ -153,7 +153,7 @@ Flags:
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
       --redact uint[=100]             redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
-  -f, --report-format string          output format (json, csv, junit, sarif, template)
+  -f, --report-format string          output format (json, csv, junit, sarif, template, cyclonedx)
   -r, --report-path string            report file
       --report-template string        template file used to generate the report (implies --report-format=template)
       --timeout int                   set a timeout for gitleaks commands in seconds (default "0", no timeout is set)
@@ -568,7 +568,52 @@ are supported.
 
 #### Reporting
 
-Gitleaks has built-in support for several report formats: [`json`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/json_simple.json), [`csv`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/csv_simple.csv?plain=1), [`junit`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/junit_simple.xml), and [`sarif`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/sarif_simple.sarif).
+Gitleaks has built-in support for several report formats: [`json`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/json_simple.json), [`csv`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/csv_simple.csv?plain=1), [`junit`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/junit_simple.xml), [`sarif`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/sarif_simple.sarif), and CycloneDX 1.5 JSON.
+
+### CycloneDX 1.5 reports
+
+Use `--report-format cyclonedx` to opt in. The existing default output, report
+inference, exit codes, and log output are unchanged when this format is not
+selected. A `.cdx.json` or `.cyclonedx.json` report path also selects the format
+when `--report-format` is omitted.
+
+```sh
+gitleaks git --report-format cyclonedx --report-path gitleaks.cdx.json
+```
+
+Migration example:
+
+```sh
+# Before: downstream artifact repositories rejected the finding list.
+gitleaks git --report-format json --report-path gitleaks.json
+
+# After: emit a CycloneDX 1.5 BOM from the same scan.
+gitleaks git --report-format cyclonedx --report-path gitleaks.cdx.json
+```
+
+Finding components use the rule ID as `name`, the commit as `version`, and a
+`pkg:generic/<source path>/<rule ID>@<commit>` purl. Source directories and files
+are emitted as path components, so the CycloneDX dependency graph preserves
+direct and transitive parent/child relationships. Components are deduplicated
+by `(name, version, purl)`. Repeated occurrences of the same secret are merged,
+the earliest dated commit is retained, and `gitleaks:first-introduced-commit`
+plus the occurrence count are exposed as component properties. Missing name,
+version, or source metadata is replaced with `unknown`, marked on the component,
+and counted in BOM metadata.
+
+Output is deterministic: no timestamps or random UUIDs are emitted, components
+and dependency children are sorted, and each component is marshaled and written
+individually rather than buffering the complete BOM. The reporter is stateless,
+so separate or shared reporter instances do not mutate shared report data;
+concurrent callers only share the thread-safe logger. As with the existing
+reporters, each concurrent call must provide its own writer.
+
+Known limitations: this is a finding-oriented BOM, not a package-manifest SBOM;
+the rule ID is the component identity and the commit is its version. Earliest
+commit selection uses RFC 3339 finding dates. If dates are absent, commit and
+source values provide a deterministic fallback rather than a chronological
+guarantee. Secret values are never written to the BOM; only SHA-256 identifiers
+are included.
 
 If none of these formats fit your need, you can create your own report format with a [Go `text/template` .tmpl file](https://www.digitalocean.com/community/tutorials/how-to-use-templates-in-go#step-4-writing-a-template) and the `--report-template` flag. The template can use [extended functionality from the `Masterminds/sprig` template library](https://masterminds.github.io/sprig/).
 
