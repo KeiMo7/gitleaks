@@ -121,12 +121,32 @@ func compare(t *testing.T, a, b []report.Finding) {
 			return a.Secret < b.Secret
 		}),
 		cmpopts.IgnoreFields(report.Finding{},
-			"Fingerprint", "Author", "Email", "Date", "Message", "Commit", "requiredFindings"),
+			"Fingerprint", "Author", "Email", "Date", "Message", "Commit", "requiredFindings",
+			// Level-gating fields are covered by gating_test.go.
+			"Severity", "Confidence", "Decision", "ExemptionSource"),
 		cmpopts.EquateApprox(0.0001, 0), // For floating point Entropy comparison
 	); diff != "" {
 		t.Errorf("findings mismatch (-want +got):\n%s", diff)
 	}
 
+}
+
+// assertFindingsMatch compares finding sets while ignoring the level-gating
+// metadata, which predates these legacy test expectations and is covered
+// exhaustively in gating_test.go.
+func assertFindingsMatch(t *testing.T, expected, actual []report.Finding) {
+	stripLevels := func(findings []report.Finding) []report.Finding {
+		out := make([]report.Finding, len(findings))
+		for i, finding := range findings {
+			finding.Severity = ""
+			finding.Confidence = ""
+			finding.Decision = ""
+			finding.ExemptionSource = ""
+			out[i] = finding
+		}
+		return out
+	}
+	assert.ElementsMatch(t, stripLevels(expected), stripLevels(actual))
 }
 
 func TestDetect(t *testing.T) {
@@ -1320,7 +1340,7 @@ func TestFromGit(t *testing.T) {
 			for _, f := range findings {
 				f.Match = "" // remove lines cause copying and pasting them has some wack formatting
 			}
-			assert.ElementsMatch(t, tt.expectedFindings, findings)
+			assertFindingsMatch(t, tt.expectedFindings, findings)
 		})
 	}
 }
@@ -1392,7 +1412,7 @@ func TestFromGitStaged(t *testing.T) {
 		for _, f := range findings {
 			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
 		}
-		assert.ElementsMatch(t, tt.expectedFindings, findings)
+		assertFindingsMatch(t, tt.expectedFindings, findings)
 	}
 }
 
@@ -1521,7 +1541,7 @@ func TestFromFiles(t *testing.T) {
 				}
 				normalizedFindings[i] = f
 			}
-			assert.ElementsMatch(t, tt.expectedFindings, normalizedFindings)
+			assertFindingsMatch(t, tt.expectedFindings, normalizedFindings)
 		})
 	}
 }
@@ -2118,7 +2138,7 @@ func TestDetectWithArchives(t *testing.T) {
 				}
 				normalizedFindings[i] = f
 			}
-			assert.ElementsMatch(t, tt.expectedFindings, normalizedFindings)
+			assertFindingsMatch(t, tt.expectedFindings, normalizedFindings)
 		})
 	}
 
@@ -2179,7 +2199,7 @@ func TestDetectWithSymlinks(t *testing.T) {
 
 		findings, err := detector.DetectFiles(paths)
 		require.NoError(t, err)
-		assert.ElementsMatch(t, tt.expectedFindings, findings)
+		assertFindingsMatch(t, tt.expectedFindings, findings)
 	}
 }
 

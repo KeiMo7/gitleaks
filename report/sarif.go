@@ -66,9 +66,25 @@ func (r *SarifReporter) getRules() []Rules {
 			Description: ShortDescription{
 				Text: rule.Description,
 			},
+			Level: sarifLevel(rule.Severity.String()),
 		})
 	}
 	return rules
+}
+
+// sarifLevel maps gitleaks severities onto the SARIF 2.1.0 failure level
+// vocabulary ("warning", "error", "note").
+func sarifLevel(severity string) string {
+	switch severity {
+	case "critical", "high":
+		return "error"
+	case "medium":
+		return "warning"
+	case "low":
+		return "note"
+	default:
+		return "warning"
+	}
 }
 
 func messageText(f Finding) string {
@@ -99,8 +115,12 @@ func getResults(findings []Finding) []Results {
 				Author:        f.Author,
 			},
 			Properties: Properties{
-				Tags: f.Tags,
+				Tags:       f.Tags,
+				Severity:   f.Severity,
+				Confidence: f.Confidence,
+				Decision:   f.Decision,
 			},
+			Level: sarifLevel(f.Severity),
 		}
 		results = append(results, r)
 	}
@@ -157,6 +177,7 @@ type FullDescription struct {
 type Rules struct {
 	ID          string           `json:"id"`
 	Description ShortDescription `json:"shortDescription"`
+	Level       string           `json:"level,omitempty"`
 }
 
 type Driver struct {
@@ -200,7 +221,10 @@ type Locations struct {
 }
 
 type Properties struct {
-	Tags []string `json:"tags"`
+	Tags       []string `json:"tags"`
+	Severity   string   `json:"severity,omitempty"`
+	Confidence string   `json:"confidence,omitempty"`
+	Decision   string   `json:"decision,omitempty"`
 }
 
 type Results struct {
@@ -209,6 +233,7 @@ type Results struct {
 	Locations           []Locations `json:"locations"`
 	PartialFingerPrints `json:"partialFingerprints"`
 	Properties          Properties `json:"properties"`
+	Level               string     `json:"level,omitempty"`
 }
 
 type Runs struct {

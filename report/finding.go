@@ -16,6 +16,24 @@ type Finding struct {
 	RuleID      string
 	Description string
 
+	// Severity and Confidence carry the matched rule's levels. They are
+	// populated on every finding even when level gating is disabled, so
+	// downstream consumers always have the metadata. When gating is disabled
+	// the values come from the conservative rule defaults.
+	Severity   string
+	Confidence string
+
+	// Decision is the level-gating outcome: "blocking", "reported",
+	// "exempted" or "unset" when gating is disabled. Only "blocking" findings
+	// cause the non-zero exit code; "reported" and "exempted" findings remain
+	// visible in the report and the gating summary.
+	Decision string
+
+	// ExemptionSource describes which scoped exemption suppressed the
+	// blocking decision, including its description when one was configured.
+	// Empty when no exemption was applied.
+	ExemptionSource string `json:",omitempty"`
+
 	StartLine   int
 	EndLine     int
 	StartColumn int

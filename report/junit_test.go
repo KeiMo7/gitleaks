@@ -37,6 +37,9 @@ func TestWriteJunit(t *testing.T) {
 					Email:       "johndoe@gmail.com",
 					Date:        "10-19-2003",
 					Tags:        []string{},
+					Severity:    "high",
+					Confidence:  "high",
+					Decision:    "blocking",
 				},
 				{
 
@@ -55,6 +58,9 @@ func TestWriteJunit(t *testing.T) {
 					Email:       "",
 					Date:        "",
 					Tags:        []string{},
+					Severity:    "low",
+					Confidence:  "medium",
+					Decision:    "reported",
 				},
 			},
 		},

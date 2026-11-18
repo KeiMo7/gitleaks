@@ -1,0 +1,58 @@
+title = "gitleaks gating test config"
+
+[gating]
+minSeverity = "high"
+minConfidence = "medium"
+
+[[gating.exemptions]]
+description = "known test fixture key in fixtures directory"
+ruleID = "hardcoded-critical-key"
+path = '''testdata/'''
+
+[[gating.exemptions]]
+description = "temporary acceptance of low-signal entropy rule"
+ruleID = "entropy-low-confidence"
+expiresAt = "2030-01-01T00:00:00Z"
+
+[[gating.exemptions]]
+description = "expired waiver kept to verify expiry auditing"
+ruleID = "hardcoded-critical-key"
+path = '''legacy/'''
+expiresAt = "2000-01-01T00:00:00Z"
+
+[[gating.exemptions]]
+description = "points at a rule that is not loaded"
+ruleID = "does-not-exist-rule"
+
+[[rules]]
+id = "hardcoded-critical-key"
+description = "Hardcoded production credential"
+regex = '''CRITICAL-KEY-[0-9]{8}'''
+severity = "critical"
+confidence = "high"
+
+[[rules]]
+id = "hardcoded-high-secret"
+description = "Hardcoded high severity secret"
+regex = '''HIGH-SECRET-[0-9]{8}'''
+severity = "high"
+confidence = "high"
+
+[[rules]]
+id = "fixture-medium-token"
+description = "Test fixture lookalike token"
+regex = '''MEDIUM-TOKEN-[0-9]{8}'''
+severity = "medium"
+confidence = "medium"
+
+[[rules]]
+id = "entropy-low-confidence"
+description = "Entropy heuristic with frequent false positives"
+regex = '''LOW-SIGNAL-[0-9]{8}'''
+severity = "high"
+confidence = "low"
+
+[[rules]]
+id = "unannotated-default-rule"
+description = "Rule without level annotation"
+regex = '''DEFAULT-RULE-[0-9]{8}'''

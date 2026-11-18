@@ -37,6 +37,9 @@ func TestWriteCSV(t *testing.T) {
 					Date:        "10-19-2003",
 					Fingerprint: "fingerprint",
 					Tags:        []string{"tag1", "tag2", "tag3"},
+					Severity:    "high",
+					Confidence:  "high",
+					Decision:    "blocking",
 				},
 			}},
 		{

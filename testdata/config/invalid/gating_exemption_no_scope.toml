@@ -1,0 +1,11 @@
+title = "unscoped exemption"
+
+[gating]
+
+[[gating.exemptions]]
+description = "repository-wide exemption is rejected at load time"
+
+[[rules]]
+id = "some-rule"
+description = "Some rule"
+regex = '''X-[0-9]{6}'''

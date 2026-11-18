@@ -2,6 +2,9 @@
  {
   "RuleID": "test-rule",
   "Description": "",
+  "Severity": "high",
+  "Confidence": "high",
+  "Decision": "blocking",
   "StartLine": 1,
   "EndLine": 2,
   "StartColumn": 1,

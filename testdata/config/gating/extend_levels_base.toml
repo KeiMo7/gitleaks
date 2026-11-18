@@ -1,0 +1,15 @@
+title = "base config with level annotations"
+
+[[rules]]
+id = "leveled-rule"
+description = "Base leveled rule"
+regex = '''BASE-[0-9]{6}'''
+severity = "critical"
+confidence = "high"
+
+[[rules]]
+id = "inherited-rule"
+description = "Rule that should keep its base level"
+regex = '''KEEP-[0-9]{6}'''
+severity = "medium"
+confidence = "medium"

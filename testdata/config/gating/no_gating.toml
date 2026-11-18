@@ -1,0 +1,6 @@
+title = "gitleaks config without gating section"
+
+[[rules]]
+id = "plain-rule"
+description = "Plain rule"
+regex = '''PLAIN-[0-9]{6}'''

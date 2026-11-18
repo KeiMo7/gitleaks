@@ -1,0 +1,9 @@
+title = "invalid gating threshold"
+
+[gating]
+minSeverity = "urgent"
+
+[[rules]]
+id = "some-rule"
+description = "Some rule"
+regex = '''X-[0-9]{6}'''

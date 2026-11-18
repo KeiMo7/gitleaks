@@ -1,0 +1,9 @@
+title = "invalid gating confidence"
+
+[gating]
+minConfidence = "certain"
+
+[[rules]]
+id = "some-rule"
+description = "Some rule"
+regex = '''X-[0-9]{6}'''

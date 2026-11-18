@@ -1,0 +1,8 @@
+title = "unknown rule level annotation"
+
+[[rules]]
+id = "typo-level-rule"
+description = "Rule with a typo'd severity"
+regex = '''TYPO-[0-9]{6}'''
+severity = "hihg"
+confidence = "high"

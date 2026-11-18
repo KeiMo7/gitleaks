@@ -103,7 +103,17 @@ type Detector struct {
 	ReportPath string
 	Reporter   report.Reporter
 
+	// ReportFilter limits which retained findings are written by the
+	// reporter: "all" (default), "blocking" or "reported". Filtering only
+	// affects report output; the gating summary and exit code always reflect
+	// every retained finding.
+	ReportFilter string
+
 	TotalBytes atomic.Uint64
+
+	// gating holds level-based gating state. It is always non-nil after
+	// construction but stays inert when gating is disabled.
+	gating *gatingState
 }
 
 // Fragment is an alias for sources.Fragment for backwards compatibility
@@ -128,6 +138,7 @@ func NewDetectorContext(ctx context.Context, cfg config.Config) *Detector {
 		Config:         cfg,
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
 		Sema:           semgroup.NewGroup(ctx, 40),
+		gating:         newGatingStateWithRules(cfg.Gating, cfg.Rules),
 	}
 }
 
@@ -364,7 +375,22 @@ ScanLoop:
 		}
 	}
 
-	return filter(findings, d.Redact)
+	findings = filter(findings, d.Redact)
+
+	// Stamp rule levels and the level-gating decision on every finding. Doing
+	// this at the detection boundary means both the library-facing
+	// Detect/DetectString APIs and the retained scan findings carry the same
+	// metadata; AddFinding only tallies the final outcome.
+	for i := range findings {
+		if rule, ok := d.Config.Rules[findings[i].RuleID]; ok {
+			d.gating.classify(&findings[i], rule)
+		} else {
+			findings[i].Severity = config.DefaultSeverity.String()
+			findings[i].Confidence = config.DefaultConfidence.String()
+			findings[i].Decision = report.DecisionUnset
+		}
+	}
+	return findings
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
@@ -737,11 +763,17 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		logger.Debug().
 			Str("fingerprint", finding.Fingerprint).
 			Msgf("skipping finding: baseline")
+		// Baseline suppression takes precedence over exemptions: a finding
+		// already accepted in the baseline is not re-counted as a freshly
+		// applied exemption, keeping the waiver audit honest.
+		d.gating.undoExemption(finding)
+		d.gating.tallyBaselined()
 		return
 	}
 
 	d.findingMutex.Lock()
 	d.findings = append(d.findings, finding)
+	d.gating.tally(finding.Decision)
 	if d.Verbose {
 		printFinding(finding, d.NoColor)
 	}

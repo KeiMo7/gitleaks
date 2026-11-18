@@ -36,6 +36,24 @@ type Rule struct {
 	// and reporting purposes.
 	Tags []string
 
+	// Severity states how damaging a confirmed match for this rule would be.
+	// Rules without an explicit severity annotation default to
+	// DefaultSeverity (high) so unannotated rules keep the historical
+	// "any finding blocks" behavior. An explicitly unknown value is rejected
+	// during config loading.
+	Severity Level
+
+	// Confidence states how reliable the rule's matches are. Rules without an
+	// explicit confidence annotation default to DefaultConfidence (high).
+	Confidence Level
+
+	// severitySet and confidenceSet track whether the level was explicitly
+	// annotated. They are used when extending configs so that an unannotated
+	// overriding rule inherits the base rule's level instead of resetting it
+	// to the conservative default.
+	severitySet   bool
+	confidenceSet bool
+
 	// Keywords are used for pre-regex check filtering. Rules that contain
 	// keywords will perform a quick string compare check to make sure the
 	// keyword(s) are in the content being scanned.
@@ -90,6 +108,18 @@ func (r *Rule) Validate() error {
 	// Ensure |secretGroup| works.
 	if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
 		return fmt.Errorf("%s: invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
+	}
+
+	// Reject explicitly unknown levels. The conservative fallback is applied
+	// to missing annotations during translation, not to typo'd values.
+	if r.Severity == LevelUnknown {
+		return fmt.Errorf("%s: unknown severity annotation (valid values: %s)", r.RuleID, strings.Join(ValidSeverityNames(), ", "))
+	}
+	if r.Confidence == LevelUnknown {
+		return fmt.Errorf("%s: unknown confidence annotation (valid values: %s)", r.RuleID, strings.Join(ValidConfidenceNames(), ", "))
+	}
+	if r.Confidence == LevelCritical {
+		return fmt.Errorf("%s: confidence cannot be %q (valid values: %s)", r.RuleID, LevelCritical.String(), strings.Join(ValidConfidenceNames(), ", "))
 	}
 
 	for _, allowlist := range r.Allowlists {

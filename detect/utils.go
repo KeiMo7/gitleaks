@@ -232,6 +232,12 @@ func printFinding(f report.Finding, noColor bool) {
 
 	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)
 	fmt.Printf("%-12s %f\n", "Entropy:", f.Entropy)
+	if f.Severity != "" {
+		fmt.Printf("%-12s %s (confidence: %s, decision: %s)\n", "Severity:", f.Severity, f.Confidence, f.Decision)
+	}
+	if f.ExemptionSource != "" {
+		fmt.Printf("%-12s %s\n", "Exemption:", f.ExemptionSource)
+	}
 
 	if f.File == "" {
 		f.PrintRequiredFindings()

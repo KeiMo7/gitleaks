@@ -91,6 +91,9 @@ func init() {
 	rootCmd.PersistentFlags().Int("max-decode-depth", 5, "allow recursive decoding up to this depth")
 	rootCmd.PersistentFlags().Int("max-archive-depth", 0, "allow scanning into nested archives up to this depth (default \"0\", no archive traversal is done)")
 	rootCmd.PersistentFlags().Int("timeout", 0, "set a timeout for gitleaks commands in seconds (default \"0\", no timeout is set)")
+	rootCmd.PersistentFlags().String("min-severity", "", "enable level gating and set the inclusive blocking severity threshold (low, medium, high, critical); overrides [gating] minSeverity in the config file")
+	rootCmd.PersistentFlags().String("min-confidence", "", "set the inclusive blocking confidence threshold when gating is enabled (low, medium, high); overrides [gating] minConfidence in the config file")
+	rootCmd.PersistentFlags().String("report-filter", "all", "limit report contents when gating is enabled: all, blocking (blocking findings only), reported (non-blocking findings only)")
 
 	// Add diagnostics flags
 	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof")
@@ -344,6 +347,44 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		detector.Config.Rules = ruleOverride
 	}
 
+	// Apply level-gating CLI overrides. Any flag explicitly set enables
+	// gating and invalid values fail at load time with the accepted range.
+	minSeverityFlag := mustGetStringFlag(cmd, "min-severity")
+	minConfidenceFlag := mustGetStringFlag(cmd, "min-confidence")
+	if minSeverityFlag != "" || minConfidenceFlag != "" {
+		if !detector.Config.Gating.Enabled {
+			detector.Config.Gating.Enabled = true
+			detector.Config.Gating.MinSeverity = config.DefaultMinSeverity
+			detector.Config.Gating.MinConfidence = config.DefaultMinConfidence
+		}
+	}
+	if minSeverityFlag != "" {
+		severity, err := config.ParseLevel(minSeverityFlag)
+		if err != nil {
+			logging.Fatal().Msgf("invalid --min-severity: %v", err)
+		}
+		detector.Config.Gating.MinSeverity = severity
+	}
+	if minConfidenceFlag != "" {
+		confidence, err := config.ParseLevel(minConfidenceFlag)
+		if err != nil || confidence == config.LevelCritical {
+			logging.Fatal().Msgf("invalid --min-confidence %q (valid values: %s)", minConfidenceFlag, strings.Join(config.ValidConfidenceNames(), ", "))
+		}
+		detector.Config.Gating.MinConfidence = confidence
+	}
+	if detector.Config.Gating.Enabled {
+		// Rebuild the runtime gating state against the (possibly overridden)
+		// config so thresholds and exemptions take effect.
+		detector.RebuildGating()
+
+		reportFilter := mustGetStringFlag(cmd, "report-filter")
+		if err := detector.SetReportFilter(reportFilter); err != nil {
+			logging.Fatal().Err(err).Msg("invalid --report-filter")
+		}
+	} else if filter := mustGetStringFlag(cmd, "report-filter"); filter != "" && filter != "all" {
+		logging.Warn().Msgf("--report-filter=%s has no effect because level gating is disabled", filter)
+	}
+
 	// Validate report settings.
 	reportPath := mustGetStringFlag(cmd, "report-path")
 	if reportPath != "" {
@@ -441,12 +482,27 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 		diagnosticsManager.StopDiagnostics()
 	}
 
+	gatingEnabled := detector.Config.Gating.Enabled
+	gatingSummary := detector.GatingSummary()
+	reportFindings := detector.FilteredFindings()
+
 	totalBytes := detector.TotalBytes.Load()
 	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
 	if err == nil {
 		logging.Info().Msgf("%s in %s", bytesMsg, FormatDuration(time.Since(start)))
 		if len(findings) != 0 {
-			logging.Warn().Msgf("leaks found: %d", len(findings))
+			if gatingEnabled {
+				logging.Warn().Msgf(
+					"leaks found: %d (blocking: %d, reported: %d, exempted: %d, baselined: %d)",
+					len(findings),
+					gatingSummary.Blocking,
+					gatingSummary.Reported,
+					gatingSummary.Exempted,
+					gatingSummary.Baselined,
+				)
+			} else {
+				logging.Warn().Msgf("leaks found: %d", len(findings))
+			}
 		} else {
 			logging.Info().Msg("no leaks found")
 		}
@@ -454,9 +510,30 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 		logging.Warn().Msg(bytesMsg)
 		logging.Warn().Msgf("partial scan completed in %s", FormatDuration(time.Since(start)))
 		if len(findings) != 0 {
-			logging.Warn().Msgf("%d leaks found in partial scan", len(findings))
+			if gatingEnabled {
+				logging.Warn().Msgf(
+					"%d leaks found in partial scan (blocking: %d, reported: %d, exempted: %d, baselined: %d)",
+					len(findings),
+					gatingSummary.Blocking,
+					gatingSummary.Reported,
+					gatingSummary.Exempted,
+					gatingSummary.Baselined,
+				)
+			} else {
+				logging.Warn().Msgf("%d leaks found in partial scan", len(findings))
+			}
 		} else {
 			logging.Warn().Msg("no leaks found in partial scan")
+		}
+	}
+
+	// Emit the grouped gating summary (including exemption audit) so the
+	// exit code remains interpretable without a report file. Partial scans
+	// log the results collected up to the failure as well.
+	if gatingEnabled {
+		detector.LogGatingSummary()
+		if gatingSummary.Exempted > 0 && gatingSummary.Blocking == 0 {
+			logging.Info().Msg("all active findings are exempted; exiting successfully")
 		}
 	}
 
@@ -480,7 +557,7 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 		}
 
 		// Write to the file.
-		if reportErr = detector.Reporter.Write(file, findings); reportErr != nil {
+		if reportErr = detector.Reporter.Write(file, reportFindings); reportErr != nil {
 			goto ReportEnd
 		}
 
@@ -494,7 +571,12 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 		os.Exit(1)
 	}
 
-	if len(findings) != 0 {
+	// Exit-code contract:
+	//   - gating disabled: any retained finding exits with the configured
+	//     code (historical behavior, unchanged on upgrade).
+	//   - gating enabled: only blocking findings exit with the configured
+	//     code; reported/exempted findings exit 0.
+	if detector.HasBlockingFindings() {
 		os.Exit(exitCode)
 	}
 }

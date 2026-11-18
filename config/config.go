@@ -33,6 +33,7 @@ type ViperConfig struct {
 	Title       string
 	Description string
 	Extend      Extend
+	Gating      ViperGating
 	Rules       []struct {
 		ID          string
 		Description string
@@ -42,6 +43,8 @@ type ViperConfig struct {
 		Entropy     float64
 		Keywords    []string
 		Tags        []string
+		Severity    string
+		Confidence  string
 
 		// Deprecated: this is a shim for backwards-compatibility.
 		// TODO: Remove this in 9.x.
@@ -89,6 +92,7 @@ type Config struct {
 	Extend      Extend
 	Path        string
 	Description string
+	Gating      GatingConfig
 	Rules       map[string]Rule
 	Keywords    map[string]struct{}
 	// used to keep sarif results consistent
@@ -138,6 +142,41 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		if vr.Tags == nil {
 			vr.Tags = []string{}
 		}
+
+		// Resolve rule levels. A missing annotation falls back to the
+		// conservative default (high/high); an explicit but unknown
+		// annotation is reported and also treated conservatively instead of
+		// being silently downgraded.
+		severity := DefaultSeverity
+		crSeveritySet := false
+		if vr.Severity != "" {
+			parsed, err := ParseLevel(vr.Severity)
+			if err != nil {
+				logging.Warn().
+					Str("rule-id", vr.ID).
+					Str("severity", vr.Severity).
+					Str("fallback", DefaultSeverity.String()).
+					Msgf("unknown severity annotation, falling back conservatively: %v", err)
+			} else {
+				severity = parsed
+			}
+			crSeveritySet = true
+		}
+		confidence := DefaultConfidence
+		crConfidenceSet := false
+		if vr.Confidence != "" {
+			parsed, err := ParseLevel(vr.Confidence)
+			if err != nil || parsed == LevelCritical {
+				logging.Warn().
+					Str("rule-id", vr.ID).
+					Str("confidence", vr.Confidence).
+					Str("fallback", DefaultConfidence.String()).
+					Msg("unknown confidence annotation, falling back conservatively")
+			} else {
+				confidence = parsed
+			}
+			crConfidenceSet = true
+		}
 		cr := Rule{
 			RuleID:      vr.ID,
 			Description: vr.Description,
@@ -147,8 +186,12 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Path:        pathPat,
 			Keywords:    vr.Keywords,
 			Tags:        vr.Tags,
+			Severity:    severity,
+			Confidence:  confidence,
 			SkipReport:  vr.SkipReport,
 		}
+		cr.severitySet = crSeveritySet
+		cr.confidenceSet = crConfidenceSet
 
 		// Parse the rule allowlists, including the older format for backwards compatibility.
 		if vr.AllowList != nil {
@@ -198,6 +241,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		Title:        vc.Title,
 		Description:  vc.Description,
 		Extend:       vc.Extend,
+		Gating:       GatingConfig{},
 		Rules:        rulesMap,
 		Keywords:     keywords,
 		OrderedRules: orderedRules,
@@ -257,6 +301,15 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			}
 		}
 	}
+
+	// Parse level-based gating after extension so exemption rule IDs can
+	// reference rules contributed by extended configs. Invalid thresholds
+	// fail at load time with the list of accepted values.
+	gating, err := ParseGating(vc.Gating, viper.IsSet("gating"), c.Rules)
+	if err != nil {
+		return Config{}, err
+	}
+	c.Gating = gating
 
 	// Validate the rules after everything has been assembled (including extended configs).
 	if currentExtendDepth == 0 {
@@ -471,6 +524,18 @@ func (c *Config) extend(extensionConfig Config) {
 			}
 			if currentRule.Path != nil {
 				baseRule.Path = currentRule.Path
+			}
+			// Levels are properties of the current rule definition: an
+			// explicit annotation on the extending rule replaces the base
+			// rule's level. An unannotated overriding rule inherits the base
+			// level instead of resetting it to the conservative default.
+			if currentRule.severitySet {
+				baseRule.Severity = currentRule.Severity
+				baseRule.severitySet = true
+			}
+			if currentRule.confidenceSet {
+				baseRule.Confidence = currentRule.Confidence
+				baseRule.confidenceSet = true
 			}
 			baseRule.Tags = append(baseRule.Tags, currentRule.Tags...)
 			baseRule.Keywords = append(baseRule.Keywords, currentRule.Keywords...)

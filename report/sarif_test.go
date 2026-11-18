@@ -41,6 +41,9 @@ func TestWriteSarif(t *testing.T) {
 					Email:       "johndoe@gmail.com",
 					Date:        "10-19-2003",
 					Tags:        []string{"tag1", "tag2", "tag3"},
+					Severity:    "high",
+					Confidence:  "high",
+					Decision:    "blocking",
 				},
 			}},
 	}
@@ -56,10 +59,12 @@ func TestWriteSarif(t *testing.T) {
 					{
 						RuleID:      "aws-access-key",
 						Description: "AWS Access Key",
+						Severity:    config.SeverityHigh,
 					},
 					{
 						RuleID:      "pypi",
 						Description: "PyPI upload token",
+						Severity:    config.SeverityLow,
 					},
 				},
 			}

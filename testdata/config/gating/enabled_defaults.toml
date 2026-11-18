@@ -1,0 +1,19 @@
+title = "gitleaks gating enabled with default thresholds"
+
+# Gating is enabled by declaring the section; thresholds fall back to
+# minSeverity=medium, minConfidence=low.
+[gating]
+
+[[rules]]
+id = "low-rule"
+description = "Low severity rule"
+regex = '''LOW-[0-9]{6}'''
+severity = "low"
+confidence = "low"
+
+[[rules]]
+id = "high-rule"
+description = "High severity rule"
+regex = '''HIGH-[0-9]{6}'''
+severity = "high"
+confidence = "high"

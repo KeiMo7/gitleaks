@@ -25,9 +25,15 @@ func (r *JunitReporter) Write(w io.WriteCloser, findings []Finding) error {
 }
 
 func getTestSuites(findings []Finding) []TestSuite {
+	failureCount := 0
+	for _, finding := range findings {
+		if finding.Decision == "" || finding.Decision == DecisionUnset || finding.Decision == DecisionBlocking {
+			failureCount++
+		}
+	}
 	return []TestSuite{
 		{
-			Failures:  strconv.Itoa(len(findings)),
+			Failures:  strconv.Itoa(failureCount),
 			Name:      "gitleaks",
 			Tests:     strconv.Itoa(len(findings)),
 			TestCases: getTestCases(findings),
@@ -41,10 +47,14 @@ func getTestCases(findings []Finding) []TestCase {
 	for _, f := range findings {
 		testCase := TestCase{
 			Classname: f.Description,
-			Failure:   getFailure(f),
 			File:      f.File,
 			Name:      getMessage(f),
 			Time:      "",
+		}
+		// With level gating enabled, only blocking findings are JUnit
+		// failures; reported/exempted findings stay present as passing cases.
+		if f.Decision == "" || f.Decision == DecisionUnset || f.Decision == DecisionBlocking {
+			testCase.Failure = getFailure(f)
 		}
 		testCases = append(testCases, testCase)
 	}
@@ -69,11 +79,15 @@ func getData(f Finding) string {
 }
 
 func getMessage(f Finding) string {
+	level := ""
+	if f.Severity != "" {
+		level = fmt.Sprintf(" (severity=%s confidence=%s decision=%s)", f.Severity, f.Confidence, f.Decision)
+	}
 	if f.Commit == "" {
-		return fmt.Sprintf("%s has detected a secret in file %s, line %s.", f.RuleID, f.File, strconv.Itoa(f.StartLine))
+		return fmt.Sprintf("%s has detected a secret in file %s, line %s.%s", f.RuleID, f.File, strconv.Itoa(f.StartLine), level)
 	}
 
-	return fmt.Sprintf("%s has detected a secret in file %s, line %s, at commit %s.", f.RuleID, f.File, strconv.Itoa(f.StartLine), f.Commit)
+	return fmt.Sprintf("%s has detected a secret in file %s, line %s, at commit %s.%s", f.RuleID, f.File, strconv.Itoa(f.StartLine), f.Commit, level)
 }
 
 type TestSuites struct {

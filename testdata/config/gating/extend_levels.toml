@@ -1,0 +1,19 @@
+title = "extending config overriding rule levels"
+
+[extend]
+path = "../testdata/config/gating/extend_levels_base.toml"
+
+# Explicit downgrade: the extending annotation wins over the base level.
+[[rules]]
+id = "leveled-rule"
+description = "Downgraded in child config"
+regex = '''BASE-[0-9]{6}'''
+severity = "low"
+confidence = "low"
+
+# Unannotated override: the base rule's level must be inherited, not reset
+# to the conservative default.
+[[rules]]
+id = "inherited-rule"
+description = "Overridden without level annotation"
+regex = '''KEEP-[0-9]{6}'''

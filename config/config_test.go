@@ -617,6 +617,9 @@ func testTranslate(t *testing.T, test translateCase) {
 	opts := cmp.Options{
 		cmp.Comparer(regexComparer),
 		cmpopts.IgnoreUnexported(Rule{}, Allowlist{}),
+		// Severity/Confidence defaults are covered exhaustively in
+		// severity_test.go; legacy translate cases predate level gating.
+		cmpopts.IgnoreFields(Rule{}, "Severity", "Confidence"),
 	}
 	if diff := cmp.Diff(test.cfg.Title, cfg.Title); diff != "" {
 		t.Errorf("%s diff: (-want +got)\n%s", test.cfgName, diff)

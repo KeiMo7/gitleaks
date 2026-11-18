@@ -150,10 +150,13 @@ Flags:
       --max-archive-depth int         allow scanning into nested archives up to this depth (default "0", no archive traversal is done)
       --max-decode-depth int          allow recursive decoding up to this depth (default "0", no decoding is done)
       --max-target-megabytes int      files larger than this will be skipped
+      --min-confidence string         inclusive blocking confidence threshold when gating is enabled (low, medium, high)
+      --min-severity string           enable level gating with an inclusive blocking severity threshold (low, medium, high, critical)
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
       --redact uint[=100]             redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
-  -f, --report-format string          output format (json, csv, junit, sarif, template)
+      --report-filter string          limit report contents when gating is enabled: all, blocking, reported (default "all")
+      -f, --report-format string          output format (json, csv, junit, sarif, template)
   -r, --report-path string            report file
       --report-template string        template file used to generate the report (implies --report-format=template)
       --timeout int                   set a timeout for gitleaks commands in seconds (default "0", no timeout is set)
@@ -395,6 +398,106 @@ Refer to the default [gitleaks config](https://github.com/gitleaks/gitleaks/blob
 
 ### Additional Configuration
 
+#### Level-Based Gating (Severity & Confidence)
+
+By default every finding fails the scan, which buries genuinely dangerous
+matches underneath test fixtures and entropy false positives. Level-based
+gating lets you block only the findings that matter while still reporting the
+rest. It is **opt-in**: without a `[gating]` section (and without the
+`--min-severity` / `--min-confidence` flags) behavior is identical to older
+releases, so upgrading never changes a pipeline verdict on its own.
+
+**Rule levels.** Each rule can carry two ordered annotations, reusing the
+existing rule metadata and config loading chain — there is no separate level
+table:
+
+- `severity`: `low`, `medium`, `high`, `critical`
+- `confidence`: `low`, `medium`, `high` (there is no `critical` confidence)
+
+Rules without an annotation are **not** silently treated as the lowest level.
+They default to `high`/`high`, the conservative choice that preserves the
+historical "any finding blocks" behavior. An explicit but unknown annotation
+(e.g. a typo) logs a warning and also falls back to `high`/`high`.
+
+```toml
+[[rules]]
+id = "hardcoded-production-key"
+description = "Hardcoded production credential"
+regex = '''PROD-KEY-[0-9]{8}'''
+severity = "critical"
+confidence = "high"
+
+[[rules]]
+id = "entropy-heuristic"
+description = "Entropy heuristic with frequent false positives"
+regex = '''[A-Z0-9]{16}'''
+severity = "high"
+confidence = "low"
+```
+
+**Thresholds.** Add a `[gating]` table to enable gating for a project. Both
+thresholds are inclusive: a finding is `blocking` only when its rule severity
+is `>= minSeverity` **and** its confidence is `>= minConfidence`. Everything
+else is still emitted in the report with decision `reported`, but does not
+fail the pipeline. Omitting a threshold defaults to `minSeverity = medium`
+and `minConfidence = low`. Invalid values fail at config load time and list
+the accepted range.
+
+```toml
+[gating]
+minSeverity = "high"
+minConfidence = "medium"
+```
+
+The same thresholds can be set (or overridden) per invocation with
+`--min-severity` and `--min-confidence`. Passing either flag also enables
+gating when the config has no `[gating]` table.
+
+**Scoped exemptions.** Exemptions suppress the *blocking decision* — they
+never hide a finding — and must be scoped by `ruleID`, a `path` regex, or
+both. Repository-wide exemptions are rejected at load time. Each entry can
+carry an optional RFC3339 `expiresAt`; expired entries and entries pointing
+at a non-existent rule never take effect and are listed separately in the
+gating summary instead of failing silently.
+
+```toml
+[[gating.exemptions]]
+description = "accepted test fixture key"
+ruleID = "hardcoded-production-key"
+path = '''testdata/'''
+expiresAt = "2030-01-01T00:00:00Z"
+
+[[gating.exemptions]]
+description = "waive the noisy entropy rule everywhere"
+ruleID = "entropy-heuristic"
+```
+
+**Decisions and reports.** Every finding carries `severity`, `confidence`
+and a `decision` of `blocking`, `reported`, `exempted`, or `unset` (gating
+disabled). JSON/CSV reports include these fields, SARIF maps severity to its
+`error`/`warning`/`note` level vocabulary, and JUnit only counts `blocking`
+findings as failures. Use `--report-filter` to limit report contents without
+changing the exit code:
+
+- `all` (default): every retained finding
+- `blocking`: blocking findings only
+- `reported`: non-blocking findings only (reported + exempted)
+
+The end-of-scan log always prints the grouped counts
+(`blocking` / `reported` / `exempted` / `baselined`), the applied exemption
+sources, and any invalid exemption entries. When all active findings are
+exempted the scan exits `0` and says so.
+
+**Baselines and level propagation.** Baseline suppression takes precedence:
+a finding already accepted in a baseline is dropped (and counted as
+`baselined`) regardless of its level, so historical findings never re-trigger
+blocking. Severity and confidence are always recomputed from the *current*
+rule definition at scan time, never read from the stored baseline record.
+Consequently, downgrading a rule deterministically lowers both new and
+previously-recorded matches in one direction; re-raising it later restores
+blocking without rewriting history — the level follows the rule, not the
+finding, so decisions do not flip-flop based on baseline contents.
+
 #### Composite Rules (Multi-part or `required` Rules)
 In v8.28.0 Gitleaks introduced composite rules, which are made up of a single "primary" rule and one or more auxiliary or `required` rules. To create a composite rule, add a `[[rules.required]]` table to the primary rule specifying an `id` and optionally `withinLines` and/or `withinColumns` proximity constraints. A fragment is a chunk of content that Gitleaks processes at once (typically a file, part of a file, or git diff), and proximity matching instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified area of the fragment.
 
@@ -622,9 +725,15 @@ $ gitleaks dir ~/leaky-repo/ --report-path "report.json" --report-format templat
 You can always set the exit code when leaks are encountered with the --exit-code flag. Default exit codes below:
 
 ```
-0 - no leaks present
-1 - leaks or error encountered
+0 - no leaks present, or gating is enabled and every finding is reported/exempted/baselined rather than blocking
+1 - gating disabled and any finding is present, or gating enabled and at least one finding is blocking, or a scan error occurred
 126 - unknown flag
 ```
+
+When level-based gating is enabled the exit code reflects only `blocking`
+findings; `reported` and `exempted` findings exit `0`. The gating summary in
+the logs (and the `decision` field in each report entry) makes the verdict
+explicit. Gating disabled preserves the legacy contract where any finding
+exits non-zero.
 
 ### Join the Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)
