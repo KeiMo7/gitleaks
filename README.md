@@ -188,6 +188,50 @@ If there is no target specified as a positional argument, then gitleaks will sca
 
 You can also stream data to gitleaks with the `stdin` command. Example: `cat some_file | gitleaks -v stdin`
 
+#### Changeset (incremental scan)
+
+The `changeset` command scans only the files touched by a change instead of the
+whole repository. It feeds those files through the exact same rule engine and
+report pipeline as `dir`/`git`, so every finding for a given file is identical
+to a full scan of that file (same rule id, line/column, secret and
+fingerprint). Deleted files are skipped automatically, renames are followed
+through the old path, and multiple commit ranges are unioned.
+
+The change set can be supplied in three ways:
+
+```
+# one or more git revision ranges (repeat --range to union intervals)
+gitleaks changeset --range main..HEAD --report-path findings.json .
+gitleaks changeset --range abc123..def456 --range ghi789..HEAD .
+
+# staged or unstaged working tree changes (the default with no flags)
+gitleaks changeset --staged .
+gitleaks changeset .
+
+# an explicit file list on stdin (newline or NUL separated), optionally at a
+# specific git revision instead of the working tree
+git diff --name-only main...HEAD | gitleaks changeset --stdin .
+git diff --name-only main...HEAD | gitleaks changeset --stdin --revision HEAD .
+```
+
+An empty change set (for example a docs-only pipeline run) reports
+`no scannable content in changeset`, writes an empty report when
+`--report-path` is set and exits successfully. Files referenced by the change
+set that no longer exist are logged and skipped rather than failing the scan.
+Reports are written atomically (temp file plus rename) and findings are
+stably sorted, so identical inputs produce byte-identical output.
+
+Baselines keep working. Add `--record-baseline-meta` when writing a baseline
+report to also store a sidecar (`<report>.meta.json`) holding a schema
+version, the gitleaks version and a checksum of the effective rule set.
+Later runs then:
+
+- fail loudly on a corrupted sidecar or an unsupported schema version
+  (instead of silently treating the baseline as empty);
+- warn when the baseline was produced by a different gitleaks version;
+- detect rule changes and classify findings that already existed in the
+  file's pre-image as rule-driven re-introductions rather than new problems.
+
 ### Creating a baseline
 
 When scanning large repositories or repositories with a long history, it can be convenient to use a baseline. When using a baseline,

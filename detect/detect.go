@@ -96,6 +96,16 @@ type Detector struct {
 	// gitleaksIgnore
 	gitleaksIgnore map[string]struct{}
 
+	// pathAliases maps a current file path to the path it was renamed from.
+	// It keeps baseline and .gitleaksignore fingerprints working across
+	// renames without mutating finding.File, which must match a full scan.
+	pathAliases map[string]string
+
+	// preExistingFingerprints holds fingerprints of findings that already
+	// existed in the pre-image of a changeset. Findings matching this set are
+	// classified as rule-driven re-introductions by RuleChangeFindings.
+	preExistingFingerprints map[string]struct{}
+
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
 
@@ -120,14 +130,16 @@ func NewDetector(cfg config.Config) *Detector {
 // context to use for timeouts
 func NewDetectorContext(ctx context.Context, cfg config.Config) *Detector {
 	return &Detector{
-		commitMap:      make(map[string]bool),
-		gitleaksIgnore: make(map[string]struct{}),
-		findingMutex:   &sync.Mutex{},
-		commitMutex:    &sync.Mutex{},
-		findings:       make([]report.Finding, 0),
-		Config:         cfg,
-		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
-		Sema:           semgroup.NewGroup(ctx, 40),
+		commitMap:               make(map[string]bool),
+		gitleaksIgnore:          make(map[string]struct{}),
+		pathAliases:             make(map[string]string),
+		preExistingFingerprints: make(map[string]struct{}),
+		findingMutex:            &sync.Mutex{},
+		commitMutex:             &sync.Mutex{},
+		findings:                make([]report.Finding, 0),
+		Config:                  cfg,
+		prefilter:               *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
+		Sema:                    semgroup.NewGroup(ctx, 40),
 	}
 }
 
@@ -718,14 +730,14 @@ func (d *Detector) AddFinding(finding report.Finding) {
 
 	// check if we should ignore this finding
 	logger := logging.With().Str("finding", finding.Secret).Logger()
-	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
+	if d.matchesGitleaksIgnore(globalFingerprint, finding.File) {
 		logger.Debug().
 			Str("fingerprint", globalFingerprint).
 			Msg("skipping finding: global fingerprint")
 		return
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
-		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
+		if d.matchesGitleaksIgnore(finding.Fingerprint, finding.File) {
 			logger.Debug().
 				Str("fingerprint", finding.Fingerprint).
 				Msgf("skipping finding: fingerprint")
@@ -733,7 +745,7 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		}
 	}
 
-	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {
+	if d.baseline != nil && d.matchesBaseline(finding) {
 		logger.Debug().
 			Str("fingerprint", finding.Fingerprint).
 			Msgf("skipping finding: baseline")
@@ -746,6 +758,89 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		printFinding(finding, d.NoColor)
 	}
 	d.findingMutex.Unlock()
+}
+
+// SetPathAliases configures rename aliases used when matching findings
+// against .gitleaksignore entries and baselines. The map keys are current
+// paths and values are the paths the files were renamed from.
+func (d *Detector) SetPathAliases(aliases map[string]string) {
+	d.pathAliases = make(map[string]string, len(aliases))
+	for current, old := range aliases {
+		d.pathAliases[current] = old
+	}
+}
+
+// AddPreExistingFingerprints records fingerprints that existed before the
+// changeset. See RuleChangeFindings for how they are used.
+func (d *Detector) AddPreExistingFingerprints(findings []report.Finding) {
+	for _, finding := range findings {
+		d.preExistingFingerprints[preExistingKey(finding)] = struct{}{}
+	}
+}
+
+// IsRuleChange reports whether a finding on a changed file already existed in
+// that file's pre-image, meaning it resurfaced because of a rule change
+// rather than being newly introduced.
+func (d *Detector) IsRuleChange(finding report.Finding) bool {
+	_, ok := d.preExistingFingerprints[preExistingKey(finding)]
+	return ok
+}
+
+// RuleChangeFindings returns the subset of findings classified as rule-driven
+// re-introductions.
+func (d *Detector) RuleChangeFindings() []report.Finding {
+	ruleChange := make([]report.Finding, 0)
+	for _, finding := range d.findings {
+		if d.IsRuleChange(finding) {
+			ruleChange = append(ruleChange, finding)
+		}
+	}
+	return ruleChange
+}
+
+// matchesGitleaksIgnore checks both the file's current path and the path it
+// was renamed from so rename history keeps working with existing ignore
+// fingerprints.
+func (d *Detector) matchesGitleaksIgnore(fingerprint, currentPath string) bool {
+	if _, ok := d.gitleaksIgnore[fingerprint]; ok {
+		return true
+	}
+	if oldPath, ok := d.pathAliases[currentPath]; ok {
+		aliasFingerprint := strings.Replace(fingerprint, currentPath, oldPath, 1)
+		if _, ok := d.gitleaksIgnore[aliasFingerprint]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+// matchesBaseline mirrors IsNew but also accepts baseline entries recorded
+// under a file's pre-rename path.
+func (d *Detector) matchesBaseline(finding report.Finding) bool {
+	if !IsNew(finding, d.Redact, d.baseline) {
+		return true
+	}
+	if oldPath, ok := d.pathAliases[finding.File]; ok {
+		renamed := finding
+		renamed.File = oldPath
+		return !IsNew(renamed, d.Redact, d.baseline)
+	}
+	return false
+}
+
+// globalFingerprintOf returns the commit-less fingerprint of a finding,
+// matching the format used by AddFinding and .gitleaksignore.
+func globalFingerprintOf(finding report.Finding) string {
+	return fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
+}
+
+// preExistingKey identifies the same secret under the same rule across two
+// revisions of a file. Line numbers are deliberately excluded because an
+// unrelated edit above the secret shifts its location even though the secret
+// itself is unchanged, which is exactly the rule-change case we need to
+// detect.
+func preExistingKey(finding report.Finding) string {
+	return fmt.Sprintf("%s|%s|%s", finding.File, finding.RuleID, finding.Secret)
 }
 
 // Findings returns the findings added to the detector
