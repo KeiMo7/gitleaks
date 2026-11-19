@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -96,6 +97,15 @@ type Detector struct {
 	// gitleaksIgnore
 	gitleaksIgnore map[string]struct{}
 
+	// marks is the revocable false-positive store. It is only non-nil when
+	// joint confidence decision is enabled.
+	marks *MarksStore
+
+	// Degraded records a non-fatal confidence-config degradation, if any.
+	// When set, the detector runs on built-in default thresholds and exposes
+	// this state so callers can report it.
+	Degraded *config.DegradedConfigError
+
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
 
@@ -148,6 +158,37 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 		return nil, err
 	}
 	return NewDetector(cfg), nil
+}
+
+// EnableConfidence activates the joint confidence pipeline using the
+// confidence table already present in the detector config. It loads the
+// revocable marks store and is safe to call once per detector.
+func (d *Detector) EnableConfidence() error {
+	cc := d.Config.Confidence
+	if cc == nil {
+		return nil
+	}
+	store, err := NewMarksStore(cc.Marks.Path)
+	if err != nil {
+		// Marks are an operational aid: a broken store degrades to no marks
+		// rather than aborting the scan, and the condition is reported.
+		logging.Warn().Err(err).Msg("marks store unavailable; continuing without persistent false-positive marks")
+		d.marks = &MarksStore{marks: map[string]Mark{}}
+		return nil
+	}
+	d.marks = store
+	logging.Info().
+		Str("marks", cc.Marks.Path).
+		Float64("report-threshold", cc.Decision.ReportThreshold).
+		Float64("high-threshold", cc.Decision.HighConfidenceThreshold).
+		Msg("joint rule/entropy confidence decision enabled")
+	return nil
+}
+
+// SetDegraded records a confidence-config degradation so callers can surface
+// the fallback-to-defaults status in their own reporting.
+func (d *Detector) SetDegraded(err *config.DegradedConfigError) {
+	d.Degraded = err
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
@@ -364,7 +405,62 @@ ScanLoop:
 		}
 	}
 
-	return filter(findings, d.Redact)
+	// Legacy dedupe/redact first. Generic findings fully contained in a named
+	// rule still lose precedence regardless of which pipeline is active.
+	findings = filter(findings, d.Redact)
+
+	if d.Config.Confidence == nil {
+		return findings
+	}
+
+	// Apply the revocable marks store at the fragment boundary too, so that
+	// direct library calls (Detect/DetectString) honor suppressions exactly
+	// like the source-driver path (which goes through AddFinding).
+	findings = d.applyMarks(findings)
+
+	// Joint pipeline: merge same-file duplicates into the most confident hit,
+	// then emit a deterministic confidence ordering. Running this inside
+	// DetectContext (per fragment) means scanning one file incrementally or
+	// the whole repository yields the same decision for that file.
+	findings = d.clusterFindings(findings)
+	sort.SliceStable(findings, findingLess(findings))
+	return findings
+}
+
+// applyMarks filters out findings carrying a currently-suppressed mark and
+// annotates findings whose suppression was explicitly revoked. The check is
+// fingerprint-based and never inspects or logs the secret value.
+func (d *Detector) applyMarks(findings []report.Finding) []report.Finding {
+	if d.marks == nil {
+		return findings
+	}
+	out := make([]report.Finding, 0, len(findings))
+	for _, f := range findings {
+		// Fingerprint is only assigned when findings enter via AddFinding, so
+		// derive both forms here to keep behavior identical across entrypoints.
+		globalFingerprint := fmt.Sprintf("%s:%s:%d", f.File, f.RuleID, f.StartLine)
+		commitFingerprint := ""
+		if f.Commit != "" {
+			commitFingerprint = fmt.Sprintf("%s:%s:%s:%d", f.Commit, f.File, f.RuleID, f.StartLine)
+		}
+		suppressed := d.marks.IsSuppressed(globalFingerprint) ||
+			(commitFingerprint != "" && d.marks.IsSuppressed(commitFingerprint))
+		if suppressed {
+			logging.Debug().
+				Str("rule-id", f.RuleID).
+				Str("path", f.File).
+				Int("start-line", f.StartLine).
+				Msg("skipping finding: suppressed mark")
+			continue
+		}
+		revoked := d.marks.IsRevoked(globalFingerprint) ||
+			(commitFingerprint != "" && d.marks.IsRevoked(commitFingerprint))
+		if revoked {
+			f.ConfidenceReasons = append(append([]string{}, f.ConfidenceReasons...), "mark:revoked")
+		}
+		out = append(out, f)
+	}
+	return out
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
@@ -509,7 +605,9 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		}
 		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
 			logger.Trace().
-				Str("finding", finding.Secret).
+				Str("rule-id", r.RuleID).
+				Str("path", fragment.FilePath).
+				Int("start-line", finding.StartLine).
 				Msg("skipping finding: 'gitleaks:allow' signature")
 			continue
 		}
@@ -542,11 +640,36 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		// check entropy
 		entropy := shannonEntropy(finding.Secret)
 		finding.Entropy = float32(entropy)
-		if r.Entropy != 0.0 {
+
+		if d.Config.Confidence != nil {
+			// Joint confidence mode: the legacy hard entropy gate is replaced
+			// by the additive, fully-explained decision in evaluate(). The
+			// rule entropy threshold survives as a signal band, not a drop
+			// condition, so short prefixed credentials are no longer missed.
+			signals := d.collectSignals(finding, r, fragment.FilePath)
+			decision := d.evaluate(signals)
+			finding.ConfidenceScore = float32(decision.score)
+			finding.ConfidenceLevel = decision.level
+			finding.ConfidenceReasons = decision.reasons
+			if decision.veto != "" {
+				logger.Trace().
+					Str("rule-id", r.RuleID).
+					Str("path", fragment.FilePath).
+					Int("start-line", finding.StartLine).
+					Float32("confidence", finding.ConfidenceScore).
+					Str("veto", decision.veto).
+					Msg("skipping finding: joint confidence veto")
+				continue
+			}
+		} else if r.Entropy != 0.0 {
+			// Legacy behavior, byte-identical to before the feature: entropy
+			// at or below the rule threshold drops the finding outright.
 			// entropy is too low, skip this finding
 			if entropy <= r.Entropy {
 				logger.Trace().
-					Str("finding", finding.Secret).
+					Str("rule-id", r.RuleID).
+					Str("path", fragment.FilePath).
+					Int("start-line", finding.StartLine).
 					Float32("entropy", finding.Entropy).
 					Msg("skipping finding: low entropy")
 				continue
@@ -716,8 +839,31 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		finding.Fingerprint = globalFingerprint
 	}
 
+	// Logs must never carry secret material: identify findings by rule,
+	// location and fingerprint only.
+	logger := logging.With().
+		Str("rule-id", finding.RuleID).
+		Str("path", finding.File).
+		Int("start-line", finding.StartLine).
+		Str("fingerprint", finding.Fingerprint).
+		Logger()
+
+	// Revocable false-positive marks take precedence while enabled: an
+	// explicit "suppressed" mark reuses the prior human decision, and a
+	// "revoked" mark makes the finding visible again.
+	if d.marks != nil {
+		if d.marks.IsSuppressed(finding.Fingerprint) ||
+			(finding.Commit == "" && d.marks.IsSuppressed(globalFingerprint)) {
+			logger.Debug().Msg("skipping finding: suppressed mark")
+			return
+		}
+		if d.marks.IsRevoked(finding.Fingerprint) ||
+			(finding.Commit == "" && d.marks.IsRevoked(globalFingerprint)) {
+			finding.ConfidenceReasons = append(finding.ConfidenceReasons, "mark:revoked")
+		}
+	}
+
 	// check if we should ignore this finding
-	logger := logging.With().Str("finding", finding.Secret).Logger()
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
 		logger.Debug().
 			Str("fingerprint", globalFingerprint).
@@ -743,14 +889,41 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	d.findingMutex.Lock()
 	d.findings = append(d.findings, finding)
 	if d.Verbose {
-		printFinding(finding, d.NoColor)
+		// Joint mode redacts before anything reaches stdout; legacy mode keeps
+		// printing findings unchanged.
+		printed := finding
+		if d.Config.Confidence != nil {
+			printed.Redact(100)
+		}
+		printFinding(printed, d.NoColor)
 	}
 	d.findingMutex.Unlock()
 }
 
-// Findings returns the findings added to the detector
+// Findings returns the findings added to the detector. When joint confidence
+// decision is enabled the result is finalized here — same-file clustering,
+// confidence ordering and output redaction — so both streaming (DetectSource)
+// and one-shot (Detect) callers observe identical, deterministic results.
 func (d *Detector) Findings() []report.Finding {
-	return d.findings
+	if d.Config.Confidence == nil {
+		return d.findings
+	}
+
+	d.findingMutex.Lock()
+	defer d.findingMutex.Unlock()
+
+	finalized := d.clusterFindings(d.findings)
+	sort.SliceStable(finalized, findingLess(finalized))
+
+	// Hard rule for the joint pipeline: secret material never crosses the
+	// reporting boundary. Findings() feeds every reporter, so redacting here
+	// guarantees no report format (json/csv/sarif/...) can leak a raw secret;
+	// callers needing the in-process value should use Detect(), whose return
+	// value is deliberately untouched for library/programmatic use.
+	for i := range finalized {
+		finalized[i].Redact(100)
+	}
+	return finalized
 }
 
 // AddCommit synchronously adds a commit to the commit slice
@@ -870,7 +1043,7 @@ func checkFindingAllowed(
 
 		if isAllowed {
 			event := logger.Trace().
-				Str("finding", finding.Secret).
+				Str("rule-id", finding.RuleID).
 				Str("condition", a.MatchCondition.String())
 			if commitAllowed {
 				event.Str("allowed-commit", commit)

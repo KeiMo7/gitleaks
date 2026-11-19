@@ -59,6 +59,11 @@ type ViperConfig struct {
 
 	MinVersion string
 
+	// Confidence holds the optional joint rule/entropy decision config.
+	// It is nil unless the [confidence] table is present, which keeps the
+	// legacy pipeline byte-identical when the feature is not used.
+	Confidence *ViperConfidence
+
 	configPath string
 }
 
@@ -95,6 +100,10 @@ type Config struct {
 	OrderedRules []string
 	Allowlists   []*Allowlist
 	MinVersion   string
+
+	// Confidence is the validated joint decision config, or nil when the
+	// feature is disabled (the default).
+	Confidence *ConfidenceConfig
 }
 
 // Extend is a struct that allows users to define how they want their
@@ -274,6 +283,18 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			}
 			rule.Allowlists = append(rule.Allowlists, allowlists...)
 			c.Rules[ruleID] = rule
+		}
+	}
+
+	// Translate the optional joint confidence section. A disabled or absent
+	// [confidence] table leaves c.Confidence nil so legacy behavior is kept.
+	if vc.Confidence != nil {
+		confidence, err := vc.Confidence.Translate()
+		if err != nil {
+			return Config{}, err
+		}
+		if confidence.Enabled {
+			c.Confidence = &confidence
 		}
 	}
 

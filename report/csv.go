@@ -42,6 +42,11 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 	if findings[0].Link != "" {
 		columns = append(columns, "Link")
 	}
+	// Joint confidence fields are additive and only present when the joint
+	// pipeline produced them, keeping legacy CSV output unchanged.
+	if findings[0].ConfidenceScore != 0 || findings[0].ConfidenceLevel != "" {
+		columns = append(columns, "ConfidenceScore", "ConfidenceLevel", "ConfidenceReasons")
+	}
 
 	if err = cw.Write(columns); err != nil {
 		return err
@@ -66,6 +71,13 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 		}
 		if findings[0].Link != "" {
 			row = append(row, f.Link)
+		}
+		if findings[0].ConfidenceScore != 0 || findings[0].ConfidenceLevel != "" {
+			row = append(row,
+				strconv.FormatFloat(float64(f.ConfidenceScore), 'f', 4, 32),
+				f.ConfidenceLevel,
+				strings.Join(f.ConfidenceReasons, " "),
+			)
 		}
 
 		if err = cw.Write(row); err != nil {

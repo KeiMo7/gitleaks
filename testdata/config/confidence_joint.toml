@@ -1,0 +1,62 @@
+title = "joint confidence test config"
+
+# Opt-in joint decision. Every threshold below is the same as the built-in
+# defaults; they are spelled out here to prove the behavior is config-driven.
+[confidence]
+enabled = true
+schema_version = "1"
+redact_secrets = false
+prefixes = ["ghp_", "xoxb-", "AKIA", "tok_"]
+
+[confidence.decision]
+report_threshold = 0.45
+high_confidence_threshold = 0.75
+
+[confidence.scoring]
+named_rule_base = 0.40
+generic_rule_base = 0.20
+entropy_high = 0.25
+entropy_low = 0.10
+known_prefix = 0.45
+resource_penalty = 0.20
+
+[confidence.entropy]
+high_threshold = 4.0
+veto_high_entropy_only = true
+
+[confidence.resource]
+content_patterns = [
+  '^[A-Za-z0-9+/=_-]{32,}$',
+  '^\d+\.\d+\.\d+(?:[.-][0-9A-Za-z]+)*$',
+]
+path_patterns = [
+  '\.(?:min\.js|map|wasm|png|jpe?g|zip|jar)$',
+  '(?:^|/)(?:dist|build|node_modules)(?:/|$)',
+]
+stop_words = ["build", "version", "checksum", "package"]
+min_hits = 2
+
+[confidence.cluster]
+enabled = true
+similarity_threshold = 0.85
+
+[confidence.marks]
+path = ".gitleaks-marks.json"
+
+# Generic high-entropy rule: the source of build/resource false positives.
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(?:key|token|secret|password)(?:[0-9a-z\-_\t .]{0,20})(?:=|>|:{1,3}=|<=|=>|:)(?:'|"|\s|=|\x60){0,5}([0-9a-z\-_.=]{8,150})(?:['|"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3.5
+keywords = ["key", "token", "secret", "password"]
+
+# Named, prefixed rule with a deliberately SHORT credential body. In legacy
+# mode the hard entropy gate would drop a short match on a rule carrying
+# entropy; here the prefix makes it high confidence regardless of length.
+[[rules]]
+id = "short-prefixed-token"
+description = "Short prefixed token"
+regex = '''(?:ghp_|tok_)[A-Za-z0-9]{4,40}'''
+entropy = 3.5
+keywords = ["ghp_", "tok_"]

@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -91,6 +92,7 @@ func init() {
 	rootCmd.PersistentFlags().Int("max-decode-depth", 5, "allow recursive decoding up to this depth")
 	rootCmd.PersistentFlags().Int("max-archive-depth", 0, "allow scanning into nested archives up to this depth (default \"0\", no archive traversal is done)")
 	rootCmd.PersistentFlags().Int("timeout", 0, "set a timeout for gitleaks commands in seconds (default \"0\", no timeout is set)")
+	rootCmd.PersistentFlags().String("confidence-config", "", "path to a standalone joint-confidence config file (enables the joint rule/entropy confidence decision)")
 
 	// Add diagnostics flags
 	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof")
@@ -329,6 +331,35 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		}
 	}
 
+	// Optional joint rule/entropy confidence decision. This is opt-in: when
+	// neither the [confidence] table nor --confidence-config is present the
+	// detector behaves exactly as it did before this feature.
+	confidencePath, _ := cmd.Flags().GetString("confidence-config")
+	if confidencePath != "" {
+		cc, degraded := config.LoadConfidenceConfig(confidencePath)
+		if degraded != nil {
+			if degraded.HardReject {
+				// A schema/version mismatch must not be silently ignored.
+				logging.Fatal().Err(degraded).Msg("refusing to load confidence config")
+			}
+			// Read/parse failure: continue on built-in defaults but make the
+			// degraded status unmistakable.
+			logging.Warn().Err(degraded).Msg("confidence config unavailable; using built-in default thresholds")
+			detector.SetDegraded(degraded)
+		}
+		// Only an explicitly enabled config activates the joint pipeline; an
+		// enabled=false file must leave the legacy behavior untouched.
+		if cc.Enabled {
+			cfg.Confidence = &cc
+			detector.Config.Confidence = &cc
+		}
+	}
+	if detector.Config.Confidence != nil {
+		if err := detector.EnableConfidence(); err != nil {
+			logging.Warn().Err(err).Msg("failed to initialize confidence pipeline")
+		}
+	}
+
 	// If set, only apply rules that are defined in the flag
 	rules, _ := cmd.Flags().GetStringSlice("enable-rule")
 	if len(rules) > 0 {
@@ -441,6 +472,15 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 		diagnosticsManager.StopDiagnostics()
 	}
 
+	// Surface any non-fatal degradation so a silent fallback to default
+	// thresholds can never be mistaken for the configured behavior.
+	if detector.Degraded != nil {
+		logging.Warn().
+			Str("confidence-config", detector.Degraded.Path).
+			Err(detector.Degraded.Err).
+			Msg("DEGRADED: joint confidence running on built-in default thresholds")
+	}
+
 	totalBytes := detector.TotalBytes.Load()
 	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
 	if err == nil {
@@ -486,7 +526,13 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 
 	ReportEnd:
 		if reportErr != nil {
-			logging.Fatal().Err(reportErr).Msg("failed to write report")
+			// Never discard completed work on a report-write failure: persist
+			// the findings to a fallback JSON report and keep scanning.
+			fallback := writeFallbackReport(findings)
+			logging.Error().
+				Err(reportErr).
+				Str("fallback-report", fallback).
+				Msg("failed to write report; preserved completed findings in fallback report")
 		}
 	}
 
@@ -497,6 +543,23 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 	if len(findings) != 0 {
 		os.Exit(exitCode)
 	}
+}
+
+// writeFallbackReport salvages scan results when the configured reporter
+// cannot write. JSON is used because it is always available and only appends
+// fields, preserving confidence metadata. Errors here are best-effort logged.
+func writeFallbackReport(findings []report.Finding) string {
+	fallback := fmt.Sprintf("gitleaks-fallback-%d.json", time.Now().UnixNano())
+	data, err := json.MarshalIndent(findings, "", " ")
+	if err != nil {
+		logging.Error().Err(err).Msg("could not encode fallback report")
+		return ""
+	}
+	if err := os.WriteFile(fallback, data, 0o600); err != nil {
+		logging.Error().Err(err).Str("path", fallback).Msg("could not write fallback report")
+		return ""
+	}
+	return fallback
 }
 
 func fileExists(fileName string) bool {

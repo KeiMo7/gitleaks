@@ -37,6 +37,20 @@ type Finding struct {
 	// Entropy is the shannon entropy of Value
 	Entropy float32
 
+	// ConfidenceScore is the joint rule/entropy confidence in [0,1].
+	// It is only populated when joint confidence decision is enabled, hence
+	// omitempty keeps reports produced by the legacy pipeline unchanged.
+	ConfidenceScore float32 `json:",omitempty"`
+
+	// ConfidenceLevel is the human-readable confidence band ("high" or
+	// "medium"). Populated together with ConfidenceScore.
+	ConfidenceLevel string `json:",omitempty"`
+
+	// ConfidenceReasons explains every signal that contributed to the
+	// decision, e.g. "rule:named", "entropy:high", "prefix:known",
+	// "resource:content". This makes the confidence decision auditable.
+	ConfidenceReasons []string `json:",omitempty"`
+
 	Author  string
 	Email   string
 	Date    string
