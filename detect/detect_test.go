@@ -512,21 +512,11 @@ const token = "mockSecret";
 					EndColumn:   26,
 					Entropy:     5.350665,
 				},
-				{ // Encoded key captured by custom b64 regex rule
-					Description: "Private Key",
-					Secret:      "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K",
-					Match:       "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K",
-					File:        "tmp.go",
-					Line:        "\nprivate_key: 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K'",
-					RuleID:      "b64-encoded-private-key",
-					Tags:        []string{"key", "private"},
-					StartLine:   8,
-					EndLine:     8,
-					StartColumn: 16,
-					EndColumn:   207,
-					Entropy:     5.3861146,
-				},
-				{ // Encoded key captured by plain text rule using the decoder
+				{ // Two rules fire on the same location at line 8: the
+					// plain-text rule (decoded match) and the custom b64
+					// regex rule. Neither declares a priority, so declaration
+					// order decides: the earlier "private-key" rule wins and
+					// the encoded match is retained as supporting evidence.
 					Description: "Private Key",
 					Secret:      "-----BEGIN PRIVATE KEY-----\n435f/bRUBHrbHqLY/xS3I7Oth+8rgG+0tBwfMcbk05Sgxq6QUzSYIQAop+WvsTwk2sR+C38g0Mnb\nu+QDkg0spw==\n-----END PRIVATE KEY-----",
 					Match:       "-----BEGIN PRIVATE KEY-----\n435f/bRUBHrbHqLY/xS3I7Oth+8rgG+0tBwfMcbk05Sgxq6QUzSYIQAop+WvsTwk2sR+C38g0Mnb\nu+QDkg0spw==\n-----END PRIVATE KEY-----",
@@ -539,6 +529,17 @@ const token = "mockSecret";
 					StartColumn: 16,
 					EndColumn:   207,
 					Entropy:     5.350665,
+					SupportingFindings: []*report.SupportingFinding{
+						{
+							RuleID:      "b64-encoded-private-key",
+							StartLine:   8,
+							EndLine:     8,
+							StartColumn: 16,
+							EndColumn:   207,
+							Match:       "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K",
+							Secret:      "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K",
+						},
+					},
 				},
 				{ // Encoded Small secret at the end to make sure it's picked up by the decoding
 					Description: "Small Secret",
@@ -624,7 +625,10 @@ const token = "mockSecret";
 					EndColumn:   46,
 					Entropy:     3.4428623,
 				},
-				{ // Encoded AWS config with a access key id inside a JWT
+				{ // Encoded AWS config with a access key id inside a JWT.
+					// Same-location collision with the secret access key rule;
+					// the earlier-declared IAM rule wins and keeps the other
+					// match as supporting evidence.
 					Description: "AWS IAM Unique Identifier",
 					Secret:      "ASIAIOSFODNN7LXM10JI",
 					Match:       " ASIAIOSFODNN7LXM10JI",
@@ -637,20 +641,17 @@ const token = "mockSecret";
 					StartColumn: 39,
 					EndColumn:   344,
 					Entropy:     3.6841838,
-				},
-				{ // Encoded AWS config with a secret access key inside a JWT
-					Description: "AWS Secret Access Key",
-					Secret:      "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEFUCDlEX1A",
-					Match:       "aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEFUCDlEX1A",
-					File:        "tmp.go",
-					Line:        "\neyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiY29uZmlnIjoiVzJSbFptRjFiSFJkQ25KbFoybHZiaUE5SUhWekxXVmhjM1F0TWdwaGQzTmZZV05qWlhOelgydGxlVjlwWkNBOUlFRlRTVUZKVDFOR1QwUk9UamRNV0UweE1FcEpDbUYzYzE5elpXTnlaWFJmWVdOalpYTnpYMnRsZVNBOUlIZEtZV3h5V0ZWMGJrWkZUVWt2U3pkTlJFVk9SeTlpVUhoU1ptbERXVVZHVlVORWJFVllNVUVLIiwiaWF0IjoxNTE2MjM5MDIyfQ.8gxviXEOuIBQk2LvTYHSf-wXVhnEKC3h4yM5nlOF4zA",
-					RuleID:      "aws-secret-access-key",
-					Tags:        []string{"aws", "secret", "decoded:base64", "decode-depth:2"},
-					StartLine:   11,
-					EndLine:     11,
-					StartColumn: 39,
-					EndColumn:   344,
-					Entropy:     4.721928,
+					SupportingFindings: []*report.SupportingFinding{
+						{
+							RuleID:      "aws-secret-access-key",
+							StartLine:   11,
+							EndLine:     11,
+							StartColumn: 39,
+							EndColumn:   344,
+							Match:       "aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEFUCDlEX1A",
+							Secret:      "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEFUCDlEX1A",
+						},
+					},
 				},
 				{ // Secret where the decoded match goes outside the encoded value and then encoded again
 					Description: "Overlapping",

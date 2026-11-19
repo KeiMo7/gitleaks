@@ -1,0 +1,6 @@
+[extend]
+path = "depth_4.toml"
+
+[[rules]]
+id = "depth-rule-3"
+regex = '''d3-[0-9]+'''

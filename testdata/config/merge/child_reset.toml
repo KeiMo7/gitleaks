@@ -1,0 +1,9 @@
+title = "merge child reset"
+
+[extend]
+path = "base.toml"
+
+[[rules]]
+id = "alpha"
+tags = []
+keywords = []

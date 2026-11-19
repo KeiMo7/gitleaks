@@ -1,0 +1,5 @@
+[[rules]]
+id = "dup-tags"
+regex = '''x+'''
+tags = ["a", "a", "b", "b", "c"]
+keywords = ["Dup", "dup", "DUP", "other"]

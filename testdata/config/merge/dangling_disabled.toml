@@ -1,0 +1,6 @@
+[extend]
+disabledRules = ["never-declared"]
+
+[[rules]]
+id = "real"
+regex = '''x+'''

@@ -1,0 +1,3 @@
+[[rules]]
+id = "no-condition"
+description = "has neither regex nor path"

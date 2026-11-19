@@ -1,0 +1,6 @@
+[extend]
+path = "does_not_exist.toml"
+
+[[rules]]
+id = "real"
+regex = '''x+'''

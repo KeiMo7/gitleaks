@@ -5,4 +5,4 @@ path = "../testdata/config/simple.toml"
 
 [[rules]]
 id = "aws-access-key"
-tags = ["puppy"]
+tags = ["key", "AWS", "puppy"]

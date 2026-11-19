@@ -1,0 +1,13 @@
+[[rules]]
+id = "low-priority"
+regex = '''token-[0-9]+'''
+priority = 1
+
+[[rules]]
+id = "high-priority"
+regex = '''token-[0-9]+'''
+priority = 10
+
+[[rules]]
+id = "no-priority"
+regex = '''token-[0-9]+'''

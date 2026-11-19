@@ -1,10 +1,13 @@
 package config
 
 import (
+	"crypto/sha256"
 	_ "embed"
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"sort"
+	"os"
+	"path/filepath"
 	"strings"
 
 	gv "github.com/hashicorp/go-version"
@@ -18,30 +21,31 @@ import (
 var (
 	//go:embed gitleaks.toml
 	DefaultConfig string
-
-	// use to keep track of how many configs we can extend
-	// yea I know, globals bad
-	extendDepth int
 )
-
-const maxExtendDepth = 2
 
 // ViperConfig is the config struct used by the Viper config package
 // to parse the config file. This struct does not include regular expressions.
 // It is used as an intermediary to convert the Viper config to the Config struct.
+//
+// Scalar rule fields use pointers so that an explicitly declared zero value
+// can be distinguished from an undeclared field during inheritance merges.
+// Slice fields use pointer-to-slice for the same reason: nil means
+// undeclared while an empty non-nil slice means "explicitly reset".
 type ViperConfig struct {
 	Title       string
 	Description string
 	Extend      Extend
 	Rules       []struct {
 		ID          string
-		Description string
-		Path        string
-		Regex       string
-		SecretGroup int
-		Entropy     float64
-		Keywords    []string
-		Tags        []string
+		Description *string
+		Path        *string
+		Regex       *string
+		SecretGroup *int
+		Entropy     *float64
+		Keywords    *[]string
+		Tags        *[]string
+		SkipReport  *bool
+		Priority    *int
 
 		// Deprecated: this is a shim for backwards-compatibility.
 		// TODO: Remove this in 9.x.
@@ -49,7 +53,6 @@ type ViperConfig struct {
 
 		Allowlists []*viperRuleAllowlist
 		Required   []*viperRequired
-		SkipReport bool
 	}
 	// Deprecated: this is a shim for backwards-compatibility.
 	// TODO: Remove this in 9.x.
@@ -69,6 +72,8 @@ type viperRequired struct {
 }
 
 type viperRuleAllowlist struct {
+	ID          string
+	Disabled    bool
 	Description string
 	Condition   string
 	Commits     []string
@@ -104,180 +109,160 @@ type Extend struct {
 	URL           string
 	UseDefault    bool
 	DisabledRules []string
+	// DisabledAllowlists disables inherited global allowlist entries by ID.
+	// Removing an entry never affects the other inherited entries.
+	DisabledAllowlists []string
 }
 
+// Translate converts the Viper representation of the root configuration
+// file into a fully merged, validated Config. The call is self-contained:
+// inheritance resolution uses no package-level state, so configurations
+// may be translated concurrently without interfering with each other.
 func (vc *ViperConfig) Translate() (Config, error) {
-	var (
-		keywords       = make(map[string]struct{})
-		orderedRules   []string
-		rulesMap       = make(map[string]Rule)
-		ruleAllowlists = make(map[string][]*Allowlist)
-	)
+	source := vc.configPath
+	if source == "" {
+		source = viper.ConfigFileUsed()
+	}
+	loader := newLoader()
+	return loader.translate(vc, source)
+}
 
-	// Validate individual rules.
-	for _, vr := range vc.Rules {
-		var (
-			pathPat  *regexp.Regexp
-			regexPat *regexp.Regexp
-		)
-		if vr.Path != "" {
-			pathPat = regexp.MustCompile(vr.Path)
-		}
-		if vr.Regex != "" {
-			regexPat = regexp.MustCompile(vr.Regex)
-		}
-		if vr.Keywords == nil {
-			vr.Keywords = []string{}
-		} else {
-			for i, k := range vr.Keywords {
-				keyword := strings.ToLower(k)
-				keywords[keyword] = struct{}{}
-				vr.Keywords[i] = keyword
-			}
-		}
-		if vr.Tags == nil {
-			vr.Tags = []string{}
-		}
-		cr := Rule{
-			RuleID:      vr.ID,
-			Description: vr.Description,
-			Regex:       regexPat,
-			SecretGroup: vr.SecretGroup,
-			Entropy:     vr.Entropy,
-			Path:        pathPat,
-			Keywords:    vr.Keywords,
-			Tags:        vr.Tags,
-			SkipReport:  vr.SkipReport,
-		}
+// loader resolves an inheritance chain for a single Translate call. Every
+// Translate creates its own loader, which guarantees that concurrent loads
+// cannot share state.
+type loader struct {
+	// visited maps the resolved identity of every configuration in the
+	// current chain to the chain position, for cycle detection.
+	visited map[string]int
+	// hops counts parent traversals to enforce maxExtendHops.
+	hops int
+}
 
-		// Parse the rule allowlists, including the older format for backwards compatibility.
-		if vr.AllowList != nil {
-			// TODO: Remove this in v9.
-			if len(vr.Allowlists) > 0 {
-				return Config{}, fmt.Errorf("%s: [rules.allowlist] is deprecated, it cannot be used alongside [[rules.allowlist]]", cr.RuleID)
-			}
-			vr.Allowlists = append(vr.Allowlists, vr.AllowList)
-		}
-		for _, a := range vr.Allowlists {
-			allowlist, err := vc.parseAllowlist(a)
-			if err != nil {
-				return Config{}, fmt.Errorf("%s: [[rules.allowlists]] %w", cr.RuleID, err)
-			}
-			cr.Allowlists = append(cr.Allowlists, allowlist)
-		}
+func newLoader() *loader {
+	return &loader{visited: make(map[string]int)}
+}
 
-		for _, r := range vr.Required {
-			if r.ID == "" {
-				return Config{}, fmt.Errorf("%s: [[rules.required]] rule ID is empty", cr.RuleID)
-			}
-			requiredRule := Required{
-				RuleID:        r.ID,
-				WithinLines:   r.WithinLines,
-				WithinColumns: r.WithinColumns,
-				// Distance: r.Distance,
-			}
-			cr.RequiredRules = append(cr.RequiredRules, &requiredRule)
-		}
-
-		orderedRules = append(orderedRules, cr.RuleID)
-		rulesMap[cr.RuleID] = cr
+// translate loads the root ViperConfig plus its whole inheritance chain,
+// then folds the chain into a Config.
+func (l *loader) translate(rootVC *ViperConfig, source string) (Config, error) {
+	if source == "" {
+		source = "<inline config>"
 	}
 
-	// after all the rules have been processed, let's ensure the required rules
-	// actually exist.
-	for _, r := range rulesMap {
-		for _, rr := range r.RequiredRules {
-			if _, ok := rulesMap[rr.RuleID]; !ok {
-				return Config{}, fmt.Errorf("%s: [[rules.required]] rule ID '%s' does not exist", r.RuleID, rr.RuleID)
-			}
-		}
-	}
-
-	// Assemble the config.
-	c := Config{
-		Title:        vc.Title,
-		Description:  vc.Description,
-		Extend:       vc.Extend,
-		Rules:        rulesMap,
-		Keywords:     keywords,
-		OrderedRules: orderedRules,
-		MinVersion:   vc.MinVersion,
-	}
-
-	if extendDepth > 0 {
-		// annoying hack to set the current config with the extended path
-		// since if extendDepth > 0 we are operating an extended config.
-		c.Path = vc.configPath
-	} else {
-		// I don't love this
-		c.Path = viper.ConfigFileUsed()
-	}
-
-	if err := validateMinVersion(c.MinVersion, c.Path); err != nil {
+	layers, err := l.loadChain(rootVC, source)
+	if err != nil {
 		return Config{}, err
 	}
 
-	// Parse the config allowlists, including the older format for backwards compatibility.
-	if vc.AllowList != nil {
-		// TODO: Remove this in v9.
-		if len(vc.Allowlists) > 0 {
-			return Config{}, errors.New("[allowlist] is deprecated, it cannot be used alongside [[allowlists]]")
-		}
-		vc.Allowlists = append(vc.Allowlists, vc.AllowList)
-	}
-	for _, a := range vc.Allowlists {
-		allowlist, err := vc.parseAllowlist(&a.viperRuleAllowlist)
-		if err != nil {
-			return Config{}, fmt.Errorf("[[allowlists]] %w", err)
-		}
-		// Allowlists with |targetRules| aren't added to the global list.
-		if len(a.TargetRules) > 0 {
-			for _, ruleID := range a.TargetRules {
-				// It's not possible to validate |ruleID| until after extend.
-				ruleAllowlists[ruleID] = append(ruleAllowlists[ruleID], allowlist)
-			}
-		} else {
-			c.Allowlists = append(c.Allowlists, allowlist)
-		}
+	cfg, err := mergeLayers(layers)
+	if err != nil {
+		return Config{}, err
 	}
 
-	currentExtendDepth := extendDepth
-	if maxExtendDepth != currentExtendDepth {
-		// disallow both usedefault and path from being set
-		if c.Extend.Path != "" && c.Extend.UseDefault {
-			return Config{}, errors.New("unable to load config due to extend.path and extend.useDefault being set")
-		}
-		if c.Extend.UseDefault {
-			if err := c.extendDefault(vc); err != nil {
-				return Config{}, err
-			}
-		} else if c.Extend.Path != "" {
-			if err := c.extendPath(vc); err != nil {
-				return Config{}, err
-			}
-		}
+	if err := validateMinVersion(cfg.MinVersion, cfg.Path); err != nil {
+		return Config{}, err
 	}
 
-	// Validate the rules after everything has been assembled (including extended configs).
-	if currentExtendDepth == 0 {
-		for _, rule := range c.Rules {
-			if err := rule.Validate(); err != nil {
-				return Config{}, err
-			}
-		}
+	return cfg, nil
+}
 
-		// Populate targeted configs.
-		for ruleID, allowlists := range ruleAllowlists {
-			rule, ok := c.Rules[ruleID]
-			if !ok {
-				return Config{}, fmt.Errorf("[[allowlists]] target rule ID '%s' does not exist", ruleID)
-			}
-			rule.Allowlists = append(rule.Allowlists, allowlists...)
-			c.Rules[ruleID] = rule
-		}
+// loadChain walks the extend declarations from the root upwards and
+// returns the layers ordered oldest-ancestor-first.
+func (l *loader) loadChain(vc *ViperConfig, source string) ([]rawLayer, error) {
+	if pos, ok := l.visited[source]; ok {
+		return nil, fmt.Errorf("configuration inheritance cycle detected: %s (first reached at hop %d, revisited at hop %d)", source, pos, l.hops)
+	}
+	l.visited[source] = l.hops
+
+	layer, err := parseLayer(vc, source)
+	if err != nil {
+		return nil, err
 	}
 
-	return c, nil
+	if !layer.extend.UseDefault && layer.extend.Path == "" {
+		// Leaf of the chain.
+		return []rawLayer{layer}, nil
+	}
+	if layer.extend.UseDefault && layer.extend.Path != "" {
+		return nil, errors.New("unable to load config due to extend.path and extend.useDefault being set")
+	}
+
+	if l.hops >= maxExtendHops {
+		return nil, fmt.Errorf("configuration inheritance depth exceeded the limit of %d parents while resolving %s", maxExtendHops, source)
+	}
+	l.hops++
+
+	var parentVC *ViperConfig
+	var parentSource string
+	if layer.extend.UseDefault {
+		parentVC, parentSource, err = l.readDefaultConfig()
+	} else {
+		parentVC, parentSource, err = l.readPathConfig(layer.extend.Path, source)
+	}
+	if err != nil {
+		// An unreadable parent fails the whole load; we never degrade to
+		// running with only the local rules.
+		return nil, err
+	}
+
+	parentLayers, err := l.loadChain(parentVC, parentSource)
+	if err != nil {
+		return nil, err
+	}
+	return append(parentLayers, layer), nil
+}
+
+// readPathConfig reads a parent configuration from disk using a private
+// Viper instance so global Viper state is never touched.
+func (l *loader) readPathConfig(extendPath, childSource string) (*ViperConfig, string, error) {
+	resolved := resolveExtendPath(extendPath, childSource)
+	data, err := os.ReadFile(resolved)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to load extended config %q: %w", extendPath, err)
+	}
+
+	v := viper.New()
+	v.SetConfigType("toml")
+	if err := v.ReadConfig(strings.NewReader(string(data))); err != nil {
+		return nil, "", fmt.Errorf("failed to load extended config %q: %w", extendPath, err)
+	}
+	parentVC := &ViperConfig{}
+	if err := v.Unmarshal(parentVC); err != nil {
+		return nil, "", fmt.Errorf("failed to load extended config %q: %w", extendPath, err)
+	}
+	parentVC.configPath = resolved
+	return parentVC, resolved, nil
+}
+
+// readDefaultConfig reads the embedded default configuration.
+func (l *loader) readDefaultConfig() (*ViperConfig, string, error) {
+	v := viper.New()
+	v.SetConfigType("toml")
+	if err := v.ReadConfig(strings.NewReader(DefaultConfig)); err != nil {
+		return nil, "", fmt.Errorf("failed to load extended default config: %w", err)
+	}
+	parentVC := &ViperConfig{}
+	if err := v.Unmarshal(parentVC); err != nil {
+		return nil, "", fmt.Errorf("failed to load extended default config: %w", err)
+	}
+	logging.Debug().Msg("extending config with default config")
+	return parentVC, DefaultConfigSource, nil
+}
+
+// resolveExtendPath resolves an extend.path value. Paths are first tried
+// relative to the directory of the child configuration (the intuitive
+// semantics); if that file does not exist, the original value is used
+// unchanged so legacy configurations relying on CWD-relative paths keep
+// working.
+func resolveExtendPath(extendPath, childSource string) string {
+	if filepath.IsAbs(extendPath) || childSource == DefaultConfigSource || childSource == "<inline config>" {
+		return extendPath
+	}
+	relativeToChild := filepath.Join(filepath.Dir(childSource), extendPath)
+	if _, err := os.Stat(relativeToChild); err == nil {
+		return filepath.Clean(relativeToChild)
+	}
+	return extendPath
 }
 
 func validateMinVersion(minVer string, configPath string) error {
@@ -315,7 +300,9 @@ func validateMinVersion(minVer string, configPath string) error {
 	return nil
 }
 
-func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
+// parseAllowlist compiles a raw allowlist declaration. It does not call
+// Validate, which is deferred until the whole config has been assembled.
+func parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
 	var matchCondition AllowlistMatchCondition
 	switch strings.ToUpper(a.Condition) {
 	case "AND", "&&":
@@ -339,22 +326,31 @@ func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error)
 		}
 	}
 	var allowlistRegexes []*regexp.Regexp
-	for _, a := range a.Regexes {
-		allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
+	for _, pattern := range a.Regexes {
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			return nil, err
+		}
+		allowlistRegexes = append(allowlistRegexes, re)
 	}
 	var allowlistPaths []*regexp.Regexp
-	for _, a := range a.Paths {
-		allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
+	for _, pattern := range a.Paths {
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			return nil, err
+		}
+		allowlistPaths = append(allowlistPaths, re)
 	}
 
 	allowlist := &Allowlist{
+		ID:             a.ID,
 		Description:    a.Description,
 		MatchCondition: matchCondition,
-		Commits:        a.Commits,
+		Commits:        append([]string(nil), a.Commits...),
 		Paths:          allowlistPaths,
 		RegexTarget:    regexTarget,
 		Regexes:        allowlistRegexes,
-		StopWords:      a.StopWords,
+		StopWords:      append([]string(nil), a.StopWords...),
 	}
 	if err := allowlist.Validate(); err != nil {
 		return nil, err
@@ -362,6 +358,7 @@ func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error)
 	return allowlist, nil
 }
 
+// GetOrderedRules returns the rules in their stable declaration order.
 func (c *Config) GetOrderedRules() []Rule {
 	var orderedRules []Rule
 	for _, id := range c.OrderedRules {
@@ -372,121 +369,26 @@ func (c *Config) GetOrderedRules() []Rule {
 	return orderedRules
 }
 
-func (c *Config) extendDefault(parent *ViperConfig) error {
-	extendDepth++
-	viper.SetConfigType("toml")
-	if err := viper.ReadConfig(strings.NewReader(DefaultConfig)); err != nil {
-		return fmt.Errorf("failed to load extended default config, err: %w", err)
+// allowlistIdentity returns the stable key used for entry-level merging.
+// Explicit IDs win; otherwise a content fingerprint is used so identical
+// entries inherited through repeated chains collapse instead of growing.
+func allowlistIdentity(explicitID string, a *Allowlist) string {
+	if explicitID != "" {
+		return explicitID
 	}
-	defaultViperConfig := ViperConfig{}
-	if err := viper.Unmarshal(&defaultViperConfig); err != nil {
-		return fmt.Errorf("failed to load extended default config, err: %w", err)
+	h := sha256.New()
+	fmt.Fprintf(h, "cond=%d|target=%s|desc=%s\n", a.MatchCondition, a.RegexTarget, a.Description)
+	for _, c := range a.Commits {
+		h.Write([]byte("commit:" + c + "\n"))
 	}
-	cfg, err := defaultViperConfig.Translate()
-	if err != nil {
-		return fmt.Errorf("failed to load extended default config, err: %w", err)
-
+	for _, r := range a.Regexes {
+		h.Write([]byte("regex:" + r.String() + "\n"))
 	}
-	logging.Debug().Msg("extending config with default config")
-	c.extend(cfg)
-	return nil
-}
-
-func (c *Config) extendPath(parent *ViperConfig) error {
-	extendDepth++
-	viper.SetConfigFile(c.Extend.Path)
-	if err := viper.ReadInConfig(); err != nil {
-		return fmt.Errorf("failed to load extended config, err: %w", err)
+	for _, p := range a.Paths {
+		h.Write([]byte("path:" + p.String() + "\n"))
 	}
-	extensionViperConfig := ViperConfig{}
-	if err := viper.Unmarshal(&extensionViperConfig); err != nil {
-		return fmt.Errorf("failed to load extended config, err: %w", err)
+	for _, s := range a.StopWords {
+		h.Write([]byte("stop:" + s + "\n"))
 	}
-
-	extensionViperConfig.configPath = c.Extend.Path
-	logging.Debug().Msgf("extending config with %s", c.Extend.Path)
-	cfg, err := extensionViperConfig.Translate()
-	if err != nil {
-		return fmt.Errorf("failed to load extended config, err: %w", err)
-	}
-	c.extend(cfg)
-	return nil
-}
-
-func (c *Config) extendURL() {
-	// TODO
-}
-
-func (c *Config) extend(extensionConfig Config) {
-	// Get config name for helpful log messages.
-	var configName string
-	if c.Extend.Path != "" {
-		configName = c.Extend.Path
-	} else {
-		configName = "default"
-	}
-	// Convert |Config.DisabledRules| into a map for ease of access.
-	disabledRuleIDs := map[string]struct{}{}
-	for _, id := range c.Extend.DisabledRules {
-		if _, ok := extensionConfig.Rules[id]; !ok {
-			logging.Warn().
-				Str("rule-id", id).
-				Str("config", configName).
-				Msg("Disabled rule doesn't exist in extended config.")
-		}
-		disabledRuleIDs[id] = struct{}{}
-	}
-
-	for ruleID, baseRule := range extensionConfig.Rules {
-		// Skip the rule.
-		if _, ok := disabledRuleIDs[ruleID]; ok {
-			logging.Debug().
-				Str("rule-id", ruleID).
-				Str("config", configName).
-				Msg("Ignoring rule from extended config.")
-			continue
-		}
-
-		currentRule, ok := c.Rules[ruleID]
-		if !ok {
-			// Rule doesn't exist, add it to the config.
-			c.Rules[ruleID] = baseRule
-			for _, k := range baseRule.Keywords {
-				c.Keywords[k] = struct{}{}
-			}
-			c.OrderedRules = append(c.OrderedRules, ruleID)
-		} else {
-			// Rule exists, merge our changes into the base.
-			if currentRule.Description != "" {
-				baseRule.Description = currentRule.Description
-			}
-			if currentRule.Entropy != 0 {
-				baseRule.Entropy = currentRule.Entropy
-			}
-			if currentRule.SecretGroup != 0 {
-				baseRule.SecretGroup = currentRule.SecretGroup
-			}
-			if currentRule.Regex != nil {
-				baseRule.Regex = currentRule.Regex
-			}
-			if currentRule.Path != nil {
-				baseRule.Path = currentRule.Path
-			}
-			baseRule.Tags = append(baseRule.Tags, currentRule.Tags...)
-			baseRule.Keywords = append(baseRule.Keywords, currentRule.Keywords...)
-			baseRule.Allowlists = append(baseRule.Allowlists, currentRule.Allowlists...)
-			// The keywords from the base rule and the extended rule must be merged into the global keywords list
-			for _, k := range baseRule.Keywords {
-				c.Keywords[k] = struct{}{}
-			}
-			c.Rules[ruleID] = baseRule
-		}
-	}
-
-	// append allowlists, not attempting to merge
-	c.Allowlists = append(c.Allowlists, extensionConfig.Allowlists...)
-
-	// sort to keep extended rules in order
-	sort.Strings(c.OrderedRules)
-	return
+	return "fp:" + hex.EncodeToString(h.Sum(nil))
 }

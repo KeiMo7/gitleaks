@@ -1,0 +1,7 @@
+[[rules]]
+id = "first-declared"
+regex = '''token-[0-9]+'''
+
+[[rules]]
+id = "second-declared"
+regex = '''token-[0-9]+'''

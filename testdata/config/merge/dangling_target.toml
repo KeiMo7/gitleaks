@@ -1,0 +1,7 @@
+[[rules]]
+id = "real"
+regex = '''x+'''
+
+[[allowlists]]
+targetRules = ["ghost-rule"]
+stopwords = ["x"]

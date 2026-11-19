@@ -1,0 +1,15 @@
+title = "merge child"
+
+[extend]
+path = "base.toml"
+
+# override entropy back to "disabled" (explicit zero)
+[[rules]]
+id = "alpha"
+entropy = 0.0
+tags = ["t9"]
+
+# new local-only rule
+[[rules]]
+id = "delta"
+regex = '''delta-[0-9]+'''

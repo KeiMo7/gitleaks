@@ -1,0 +1,6 @@
+[extend]
+path = "self_cycle.toml"
+
+[[rules]]
+id = "self"
+regex = '''s+'''

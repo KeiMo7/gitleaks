@@ -1,0 +1,7 @@
+[[rules]]
+id = "dup"
+regex = '''a+'''
+
+[[rules]]
+id = "dup"
+regex = '''b+'''

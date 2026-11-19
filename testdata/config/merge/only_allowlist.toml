@@ -1,0 +1,5 @@
+title = "allowlist only"
+
+[[allowlists]]
+id = "sole-entry"
+stopwords = ["ignored"]

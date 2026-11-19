@@ -5,4 +5,5 @@ path="../testdata/config/valid/extend_rule_keywords_base.toml"
 
 [[rules]]
     id = "aws-rule-that-is-not-in-base"
+    regex = '''cms-[0-9a-f]{16}'''
     keywords = ["CMS"]

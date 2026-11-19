@@ -1,0 +1,32 @@
+title = "merge base"
+
+[[rules]]
+id = "alpha"
+description = "Alpha rule"
+regex = '''alpha-[0-9]+'''
+entropy = 2.0
+tags = ["t1", "t2"]
+keywords = ["alpha"]
+[[rules.allowlists]]
+id = "alpha-stop"
+stopwords = ["example"]
+
+[[rules]]
+id = "beta"
+description = "Beta rule"
+regex = '''beta-[0-9]+'''
+tags = ["t1"]
+
+[[rules]]
+id = "gamma"
+description = "Gamma rule"
+path = '''\.gamma$'''
+tags = ["t3"]
+
+[[allowlists]]
+id = "global-mock"
+regexes = ['''^mock-''']
+
+[[allowlists]]
+id = "global-node"
+paths = ['''^node_modules/''']

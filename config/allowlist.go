@@ -27,6 +27,10 @@ func (a AllowlistMatchCondition) String() string {
 // Allowlist allows a rule to be ignored for specific
 // regexes, paths, and/or commits
 type Allowlist struct {
+	// ID optionally identifies an allowlist entry so child configurations
+	// can disable or re-declare it during inheritance merges.
+	ID string
+
 	// Short human readable description of the allowlist.
 	Description string
 

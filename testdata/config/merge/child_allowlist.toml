@@ -1,0 +1,19 @@
+title = "merge child allowlists"
+
+[extend]
+path = "base.toml"
+disabledAllowlists = ["global-node"]
+
+# add a new global entry and disable one inherited rule-level entry
+[[allowlists]]
+id = "global-test"
+stopwords = ["testvalue"]
+
+[[rules]]
+id = "alpha"
+[[rules.allowlists]]
+id = "alpha-stop"
+disabled = true
+[[rules.allowlists]]
+id = "alpha-path"
+paths = ['''\.sample$''']

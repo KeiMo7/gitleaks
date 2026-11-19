@@ -1,0 +1,6 @@
+[extend]
+path = "cyc_a.toml"
+
+[[rules]]
+id = "b"
+regex = '''b+'''

@@ -1,0 +1,5 @@
+[[rules]]
+id = "primary"
+regex = '''x+'''
+[[rules.required]]
+id = "missing-rule"

@@ -52,12 +52,32 @@ type Rule struct {
 	RequiredRules []*Required
 
 	SkipReport bool
+
+	// Priority breaks ties when multiple rules match the same location.
+	// A higher value wins; equal priorities fall back to declaration order.
+	// The zero value means "no explicit priority".
+	Priority int
+
+	// PrioritySource records which configuration layer last declared
+	// Priority, making the tie-breaking decision traceable. It is empty
+	// when Priority was never explicitly set.
+	PrioritySource string
+
+	// order is the rule's zero-based position in the merged declaration
+	// order. It is used for deterministic tie-breaking and never exported.
+	order int
 }
 
 type Required struct {
 	RuleID        string
 	WithinLines   *int
 	WithinColumns *int
+}
+
+// Order returns the rule's zero-based position in the merged declaration
+// order. It is used for deterministic tie-breaking during scanning.
+func (r Rule) Order() int {
+	return r.order
 }
 
 // Validate guards against common misconfigurations.

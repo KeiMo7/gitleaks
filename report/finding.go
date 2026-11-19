@@ -43,6 +43,21 @@ type Finding struct {
 	Message string
 	Tags    []string
 
+	// RulePriority is the priority declared by the winning rule when
+	// several rules matched the same location. Zero means no explicit
+	// priority was declared and declaration order decided the tie.
+	RulePriority int `json:",omitempty"`
+
+	// RulePrioritySource identifies the configuration layer that declared
+	// RulePriority, making the tie-breaking decision traceable.
+	RulePrioritySource string `json:",omitempty"`
+
+	// SupportingFindings holds the matches that lost the priority
+	// contest at the same location. They are retained as evidence and
+	// reported alongside the winning finding rather than emitted as
+	// separate conclusions.
+	SupportingFindings []*SupportingFinding `json:",omitempty"`
+
 	// unique identifier
 	Fingerprint string
 
@@ -52,6 +67,20 @@ type Finding struct {
 
 	// TODO keeping private for now to during experimental phase
 	requiredFindings []*RequiredFinding
+}
+
+// SupportingFinding is a compressed view of a rule match that lost the
+// priority contest at the same location as its parent finding.
+type SupportingFinding struct {
+	RuleID             string
+	RulePriority       int
+	RulePrioritySource string
+	StartLine          int
+	EndLine            int
+	StartColumn        int
+	EndColumn          int
+	Match              string
+	Secret             string
 }
 
 type RequiredFinding struct {

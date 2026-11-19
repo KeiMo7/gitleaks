@@ -324,7 +324,10 @@ ScanLoop:
 				keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
 			}
 
-			for _, rule := range d.Config.Rules {
+			// Iterate rules in their stable declaration order instead of
+			// ranging over the map, so findings are deterministic across
+			// process restarts regardless of map randomization.
+			for _, rule := range d.Config.GetOrderedRules() {
 				select {
 				case <-ctx.Done():
 					break ScanLoop
@@ -363,6 +366,10 @@ ScanLoop:
 			}
 		}
 	}
+
+	// Collide multiple rule matches at the same location down to the
+	// single highest-priority conclusion, keeping the rest as evidence.
+	findings = resolvePriorities(findings, d.Config.Rules)
 
 	return filter(findings, d.Redact)
 }

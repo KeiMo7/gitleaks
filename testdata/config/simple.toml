@@ -101,7 +101,7 @@ title = "gitleaks config"
     tags = ["key", "Google"]
 
 [[rules]]
-    id = "google"
+    id = "google-gcp-service-account"
     description = "Google (GCP) Service Account"
     regex = '''"type": "service_account"'''
     tags = ["key", "Google"]
