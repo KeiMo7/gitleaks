@@ -81,6 +81,9 @@ func runDetect(cmd *cobra.Command, args []string) {
 				Path:            sourcePath,
 				Sema:            detector.Sema,
 				MaxArchiveDepth: detector.MaxArchiveDepth,
+				ScanBinary:      detector.ScanBinary,
+				Budget:          detector.MemoryBudget,
+				ArchiveLimits:   detector.ArchiveLimits,
 			},
 		)
 
@@ -93,6 +96,9 @@ func runDetect(cmd *cobra.Command, args []string) {
 			cmd.Context(), &sources.File{
 				Content:         os.Stdin,
 				MaxArchiveDepth: detector.MaxArchiveDepth,
+				ScanBinary:      detector.ScanBinary,
+				Budget:          detector.MemoryBudget,
+				ArchiveLimits:   detector.ArchiveLimits,
 			},
 		)
 

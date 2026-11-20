@@ -42,6 +42,12 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 	if findings[0].Link != "" {
 		columns = append(columns, "Link")
 	}
+	// Byte offsets are only present for sources that can provide them
+	// (file/stdin scans); keep the historical column layout otherwise.
+	hasOffsets := findings[0].StartOffset != 0 || findings[0].EndOffset != 0
+	if hasOffsets {
+		columns = append(columns, "StartOffset", "EndOffset")
+	}
 
 	if err = cw.Write(columns); err != nil {
 		return err
@@ -66,6 +72,12 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 		}
 		if findings[0].Link != "" {
 			row = append(row, f.Link)
+		}
+		if hasOffsets {
+			row = append(row,
+				strconv.FormatInt(f.StartOffset, 10),
+				strconv.FormatInt(f.EndOffset, 10),
+			)
 		}
 
 		if err = cw.Write(row); err != nil {

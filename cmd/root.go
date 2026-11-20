@@ -20,6 +20,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 	"github.com/zricethezav/gitleaks/v8/version"
 )
 
@@ -82,6 +83,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
 	rootCmd.PersistentFlags().BoolP("no-color", "", false, "turn off color for verbose output")
 	rootCmd.PersistentFlags().Int("max-target-megabytes", 0, "files larger than this will be skipped")
+	rootCmd.PersistentFlags().Bool("scan-binary", false, "scan binary content (application/* types and NUL-containing files) as printable segments instead of skipping it")
+	rootCmd.PersistentFlags().Int("max-scan-memory", 0, "total memory in megabytes that concurrent file scans may hold in read buffers (default \"0\", no limit)")
 	rootCmd.PersistentFlags().BoolP("ignore-gitleaks-allow", "", false, "ignore gitleaks:allow comments")
 	rootCmd.PersistentFlags().Uint("redact", 0, "redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)")
 	rootCmd.Flag("redact").NoOptDefVal = "100"
@@ -90,6 +93,8 @@ func init() {
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 5, "allow recursive decoding up to this depth")
 	rootCmd.PersistentFlags().Int("max-archive-depth", 0, "allow scanning into nested archives up to this depth (default \"0\", no archive traversal is done)")
+	rootCmd.PersistentFlags().Int("max-archive-member-megabytes", 0, "stop scanning an archive member after this many expanded megabytes; the result is marked truncated (default \"0\", no limit)")
+	rootCmd.PersistentFlags().Int("max-archive-spill-megabytes", 0, "maximum megabytes an archive may spill to a temporary file when read from a non-seekable stream (default \"0\", no limit)")
 	rootCmd.PersistentFlags().Int("timeout", 0, "set a timeout for gitleaks commands in seconds (default \"0\", no timeout is set)")
 
 	// Add diagnostics flags
@@ -292,6 +297,25 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
 		logging.Fatal().Err(err).Send()
 	}
+	if detector.ScanBinary, err = cmd.Flags().GetBool("scan-binary"); err != nil {
+		logging.Fatal().Err(err).Send()
+	}
+	var maxScanMemory int
+	if maxScanMemory, err = cmd.Flags().GetInt("max-scan-memory"); err != nil {
+		logging.Fatal().Err(err).Send()
+	}
+	if maxScanMemory > 0 {
+		detector.MemoryBudget = sources.NewByteBudget(int64(maxScanMemory) * 1_000_000)
+	}
+	var maxArchiveMemberMB, maxArchiveSpillMB int
+	if maxArchiveMemberMB, err = cmd.Flags().GetInt("max-archive-member-megabytes"); err != nil {
+		logging.Fatal().Err(err).Send()
+	}
+	if maxArchiveSpillMB, err = cmd.Flags().GetInt("max-archive-spill-megabytes"); err != nil {
+		logging.Fatal().Err(err).Send()
+	}
+	detector.ArchiveLimits.MaxMemberBytes = int64(maxArchiveMemberMB) * 1_000_000
+	detector.ArchiveLimits.MaxSpillBytes = int64(maxArchiveSpillMB) * 1_000_000
 	// set ignore gitleaks:allow flag
 	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
 		logging.Fatal().Err(err).Send()
@@ -443,6 +467,9 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 
 	totalBytes := detector.TotalBytes.Load()
 	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
+	if truncations := detector.Truncations(); truncations > 0 {
+		logging.Warn().Msgf("%d source(s) were only partially scanned: results are incomplete", truncations)
+	}
 	if err == nil {
 		logging.Info().Msgf("%s in %s", bytesMsg, FormatDuration(time.Since(start)))
 		if len(findings) != 0 {

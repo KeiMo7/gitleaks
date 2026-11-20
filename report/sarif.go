@@ -112,21 +112,30 @@ func getLocation(f Finding) []Locations {
 	if f.SymlinkFile != "" {
 		uri = f.SymlinkFile
 	}
+	region := Region{
+		StartLine:   f.StartLine,
+		EndLine:     f.EndLine,
+		StartColumn: f.StartColumn,
+		EndColumn:   f.EndColumn,
+		Snippet: Snippet{
+			Text: f.Secret,
+		},
+	}
+	// Byte offsets are only present for sources that can provide them
+	// (file/stdin scans); omit them otherwise.
+	if f.StartOffset != 0 || f.EndOffset != 0 {
+		start := f.StartOffset
+		region.ByteOffset = &start
+		length := f.EndOffset - f.StartOffset
+		region.ByteLength = &length
+	}
 	return []Locations{
 		{
 			PhysicalLocation: PhysicalLocation{
 				ArtifactLocation: ArtifactLocation{
 					URI: uri,
 				},
-				Region: Region{
-					StartLine:   f.StartLine,
-					EndLine:     f.EndLine,
-					StartColumn: f.StartColumn,
-					EndColumn:   f.EndColumn,
-					Snippet: Snippet{
-						Text: f.Secret,
-					},
-				},
+				Region: region,
 			},
 		},
 	}
@@ -183,6 +192,8 @@ type Region struct {
 	StartColumn int     `json:"startColumn"`
 	EndLine     int     `json:"endLine"`
 	EndColumn   int     `json:"endColumn"`
+	ByteOffset  *int64  `json:"byteOffset,omitempty"`
+	ByteLength  *int64  `json:"byteLength,omitempty"`
 	Snippet     Snippet `json:"snippet"`
 }
 

@@ -41,6 +41,9 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 		&sources.File{
 			Content:         os.Stdin,
 			MaxArchiveDepth: detector.MaxArchiveDepth,
+			ScanBinary:      detector.ScanBinary,
+			Budget:          detector.MemoryBudget,
+			ArchiveLimits:   detector.ArchiveLimits,
 		},
 	)
 

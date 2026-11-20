@@ -35,6 +35,17 @@ var (
 	newLineRegexp = regexp.MustCompile("\n")
 )
 
+// findingDedupKey identifies a match by where it starts. Two findings
+// with the same key are the same logical occurrence seen through the
+// cross-chunk context window.
+type findingDedupKey struct {
+	commit   string
+	file     string
+	ruleID   string
+	startLn  int
+	startCol int
+}
+
 // Detector is the main detector struct
 type Detector struct {
 	// Config is the configuration for the detector
@@ -57,6 +68,22 @@ type Detector struct {
 	// files larger than this will be skipped
 	MaxTargetMegaBytes int
 
+	// ScanBinary enables scanning of binary content (application/* MIME
+	// types and NUL-containing data) instead of skipping it. Binary
+	// content is scanned as printable segments with byte-accurate
+	// offsets. The default (false) preserves the historical skip
+	// behavior.
+	ScanBinary bool
+
+	// MemoryBudget, when set, bounds the total buffer memory held by all
+	// concurrent file scans. It is shared by every file source created
+	// for this detector.
+	MemoryBudget *sources.ByteBudget
+
+	// ArchiveLimits bounds how much work archive extraction may do. The
+	// zero value means unlimited, preserving historical behavior.
+	ArchiveLimits sources.ArchiveLimits
+
 	// followSymlinks is a flag to enable scanning symlink files
 	FollowSymlinks bool
 
@@ -78,6 +105,12 @@ type Detector struct {
 	// findings slice when adding findings.
 	findingMutex *sync.Mutex
 
+	// findingIndex deduplicates findings that share the same match start.
+	// A match straddling chunk boundaries is seen once per fragment with
+	// a growing extent as more of the stream is read; only the longest
+	// (complete) version is kept, at the earliest position.
+	findingIndex map[findingDedupKey]int
+
 	// findings is a slice of report.Findings. This is the result
 	// of the detector's scan which can then be used to generate a
 	// report.
@@ -98,6 +131,11 @@ type Detector struct {
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
+
+	// truncations counts how many sources were only partially scanned
+	// (read errors, archive limits, context-window exhaustion). A
+	// non-zero value means the result is incomplete.
+	truncations atomic.Int64
 
 	// report-related settings.
 	ReportPath string
@@ -124,6 +162,7 @@ func NewDetectorContext(ctx context.Context, cfg config.Config) *Detector {
 		gitleaksIgnore: make(map[string]struct{}),
 		findingMutex:   &sync.Mutex{},
 		commitMutex:    &sync.Mutex{},
+		findingIndex:   make(map[findingDedupKey]int),
 		findings:       make([]report.Finding, 0),
 		Config:         cfg,
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
@@ -226,8 +265,15 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 		logger := logContext.Logger()
 
 		if err != nil {
-			// Log the error and move on to the next fragment
-			logger.Error().Err(err).Send()
+			// Log the error and move on to the next fragment. Truncation
+			// errors mean the result is incomplete: record them so the
+			// caller can surface a partial-result warning.
+			if sources.IsTruncated(err) {
+				d.truncations.Add(1)
+				logger.Warn().Err(err).Msg("source truncated: results are incomplete")
+			} else {
+				logger.Error().Err(err).Send()
+			}
 			return nil
 		}
 
@@ -450,6 +496,16 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	// use currentRaw instead of fragment.Raw since this represents the current
 	// decoding pass on the text
 	for _, matchIndex := range r.Regex.FindAllStringIndex(currentRaw, -1) {
+		// Skip matches that end inside the overlap window carried over
+		// from the previous fragment: they were fully contained in (and
+		// reported with) that fragment. Matches that start in the window
+		// but extend past it straddle the chunk boundary and can only be
+		// seen here, so they are kept. This deduplicates cross-chunk
+		// matches while keeping the earliest occurrence.
+		if len(encodedSegments) == 0 && fragment.OverlapBytes > 0 && matchIndex[1] <= fragment.OverlapBytes {
+			continue
+		}
+
 		// Extract secret from match
 		secret := strings.Trim(currentRaw[matchIndex[0]:matchIndex[1]], "\n")
 
@@ -481,6 +537,18 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		// value is set for this rule
 		loc := location(newlineIndices, fragment.Raw, matchIndex)
 
+		// When the fragment begins mid-line (the line started in earlier
+		// content), in-fragment columns are relative to the fragment
+		// start. Shift columns on the fragment's first line by the
+		// line's true start so they map back to the original content.
+		if fragment.OffsetValid && loc.startLine == 0 && fragment.LineStartOffset < fragment.Offset {
+			adjust := int(fragment.Offset - fragment.LineStartOffset)
+			loc.startColumn += adjust
+			if loc.endLine == loc.startLine {
+				loc.endColumn += adjust
+			}
+		}
+
 		if matchIndex[1] > loc.endLineIndex {
 			loc.endLineIndex = matchIndex[1]
 		}
@@ -506,6 +574,16 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			finding.Email = fragment.CommitInfo.AuthorEmail
 			finding.Link = createScmLink(fragment.CommitInfo.Remote, finding)
 			finding.Message = fragment.CommitInfo.Message
+		}
+
+		// Anchor the finding to the original byte stream. matchIndex is
+		// an index into fragment.Raw (codec-adjusted for decoded
+		// segments), and fragment.Offset anchors Raw[0] to the source, so
+		// the same cumulative-offset math backs the report, the
+		// fingerprint and baseline suppression.
+		if fragment.OffsetValid {
+			finding.StartOffset = fragment.Offset + int64(matchIndex[0])
+			finding.EndOffset = fragment.Offset + int64(matchIndex[1])
 		}
 		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
 			logger.Trace().
@@ -741,6 +819,30 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	}
 
 	d.findingMutex.Lock()
+	// Deduplicate occurrences seen more than once through the cross-chunk
+	// context window: the same match start can be reported by several
+	// fragments with a growing extent as more of the stream is read.
+	// Report it once, at the earliest position, keeping the longest
+	// (complete) extent. Only offset-anchored findings (file/stream
+	// scans) are deduplicated; git-history findings are untouched.
+	if finding.EndOffset != 0 {
+		key := findingDedupKey{
+			commit:   finding.Commit,
+			file:     finding.File,
+			ruleID:   finding.RuleID,
+			startLn:  finding.StartLine,
+			startCol: finding.StartColumn,
+		}
+		if idx, ok := d.findingIndex[key]; ok {
+			if existing := d.findings[idx]; finding.EndOffset > existing.EndOffset ||
+				(finding.EndOffset == existing.EndOffset && len(finding.Secret) > len(existing.Secret)) {
+				d.findings[idx] = finding
+			}
+			d.findingMutex.Unlock()
+			return
+		}
+		d.findingIndex[key] = len(d.findings)
+	}
 	d.findings = append(d.findings, finding)
 	if d.Verbose {
 		printFinding(finding, d.NoColor)
@@ -751,6 +853,13 @@ func (d *Detector) AddFinding(finding report.Finding) {
 // Findings returns the findings added to the detector
 func (d *Detector) Findings() []report.Finding {
 	return d.findings
+}
+
+// Truncations returns how many sources were only partially scanned
+// during the last run. A non-zero value means the findings are
+// incomplete and the scan should be treated as a partial result.
+func (d *Detector) Truncations() int64 {
+	return d.truncations.Load()
 }
 
 // AddCommit synchronously adds a commit to the commit slice

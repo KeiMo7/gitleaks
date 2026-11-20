@@ -21,6 +21,14 @@ type Finding struct {
 	StartColumn int
 	EndColumn   int
 
+	// StartOffset and EndOffset are the byte offsets of the match within
+	// the source file, so a finding can be mapped back to an exact byte
+	// range of the original content (for binary content this is the
+	// primary locator). They are omitted when the source cannot provide
+	// byte offsets (e.g. git history scans).
+	StartOffset int64 `json:",omitempty"`
+	EndOffset   int64 `json:",omitempty"`
+
 	Line string `json:"-"`
 
 	Match string

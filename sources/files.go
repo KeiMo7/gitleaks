@@ -54,6 +54,14 @@ type Files struct {
 	Path            string
 	Sema            *semgroup.Group
 	MaxArchiveDepth int
+	// ScanBinary enables scanning of binary content instead of skipping
+	// it. See File.ScanBinary.
+	ScanBinary bool
+	// Budget, when set, bounds the total buffer memory held by all
+	// concurrently scanned files.
+	Budget *ByteBudget
+	// ArchiveLimits bounds archive extraction work. Zero means unlimited.
+	ArchiveLimits ArchiveLimits
 }
 
 // scanTargets yields scan targets to a callback func
@@ -168,6 +176,9 @@ func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 					Symlink:         scanTarget.Symlink,
 					Config:          s.Config,
 					MaxArchiveDepth: s.MaxArchiveDepth,
+					ScanBinary:      s.ScanBinary,
+					Budget:          s.Budget,
+					ArchiveLimits:   s.ArchiveLimits,
 				}
 
 				err = file.Fragments(ctx, yield)

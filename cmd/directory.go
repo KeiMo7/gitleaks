@@ -63,6 +63,9 @@ func runDirectory(cmd *cobra.Command, args []string) {
 			Path:            source,
 			Sema:            detector.Sema,
 			MaxArchiveDepth: detector.MaxArchiveDepth,
+			ScanBinary:      detector.ScanBinary,
+			Budget:          detector.MemoryBudget,
+			ArchiveLimits:   detector.ArchiveLimits,
 		},
 	)
 

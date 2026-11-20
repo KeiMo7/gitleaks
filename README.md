@@ -148,8 +148,12 @@ Flags:
       --ignore-gitleaks-allow         ignore gitleaks:allow comments
   -l, --log-level string              log level (trace, debug, info, warn, error, fatal) (default "info")
       --max-archive-depth int         allow scanning into nested archives up to this depth (default "0", no archive traversal is done)
+      --max-archive-member-megabytes int   stop scanning an archive member after this many expanded megabytes; the result is marked truncated (default "0", no limit)
+      --max-archive-spill-megabytes int    maximum megabytes an archive may spill to a temporary file when read from a non-seekable stream (default "0", no limit)
       --max-decode-depth int          allow recursive decoding up to this depth (default "0", no decoding is done)
+      --max-scan-memory int           total memory in megabytes that concurrent file scans may hold in read buffers (default "0", no limit)
       --max-target-megabytes int      files larger than this will be skipped
+      --scan-binary                   scan binary content (application/* types and NUL-containing files) as printable segments instead of skipping it
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
       --redact uint[=100]             redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
@@ -558,6 +562,32 @@ Link:        https://github.com/leaktk/gitleaks/blob/6e6ee6596d337bb656496425fb9
 
 This means a secret was detected on line 4 of `files/.env.prod.` which is in
 `archives/files.tar` which is in `testdata/archives/nested.tar.gz`.
+
+#### Streaming scans, byte offsets and binary content
+
+Files are scanned in bounded chunks, so resident memory does not grow with
+file size. When a chunk must be cut at an unsafe position (e.g. a single
+line longer than the read window), a bounded overlap window is carried into
+the next chunk so secrets straddling the cut are still detected; if a match
+could be longer than that window, the source is marked as truncated and the
+scan summary reports `N source(s) were only partially scanned` instead of
+silently returning partial results.
+
+Every finding produced by a file/stdin scan includes `StartOffset` and
+`EndOffset` (JSON; extra columns in CSV; `byteOffset`/`byteLength` in
+SARIF) so findings can be mapped back to the exact byte range of the
+original file or image. The fields are omitted for sources that cannot
+provide byte offsets (e.g. git history scans).
+
+Binary content (files detected as `application/*` or containing NUL bytes,
+such as firmware images without an extension) is still skipped by default.
+Pass `--scan-binary` to scan it as printable segments: non-printable bytes
+are masked in a length-preserving way, so reports stay readable while byte
+offsets remain accurate. Use `--max-scan-memory` to cap the total buffer
+memory shared by concurrent scans, and `--max-archive-member-megabytes` /
+`--max-archive-spill-megabytes` to bound archive expansion and temporary
+disk usage; hitting any of these limits stops only the affected branch and
+marks the result truncated.
 
 Currently supported formats:
 
