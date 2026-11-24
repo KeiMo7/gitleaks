@@ -7,6 +7,7 @@ import (
 
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
 	"github.com/zricethezav/gitleaks/v8/detect"
+	"github.com/zricethezav/gitleaks/v8/lifecycle"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -40,6 +41,11 @@ func runProtect(cmd *cobra.Command, args []string) {
 	// create detector
 	detector := Detector(cmd, cfg, source)
 
+	session := newLifecycleSession(cmd, lifecycle.KindDiff, source, "protect")
+	if session != nil {
+		session.attach(detector)
+	}
+
 	// parse flags
 	exitCode := mustGetIntFlag(cmd, "exit-code")
 	staged := mustGetBoolFlag(cmd, "staged")
@@ -62,5 +68,10 @@ func runProtect(cmd *cobra.Command, args []string) {
 		// don't exit on error, just log it
 		logging.Error().Err(err).Msg("failed to scan Git repository")
 	}
+
+	if session != nil {
+		session.finish(cmd.Context(), detector, findings)
+	}
+
 	findingSummaryAndExit(detector, findings, exitCode, start, err)
 }

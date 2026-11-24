@@ -1,0 +1,80 @@
+[
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 7,
+  "EndColumn": 18,
+  "Match": "LCK_BBBB2222",
+  "Secret": "LCK_BBBB2222",
+  "File": "app.env",
+  "SymlinkFile": "",
+  "Commit": "191674506f36e32d49481606b8d13d35fec772df",
+  "Entropy": 2.251629,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-02-01T00:00:00Z",
+  "Message": "rotate to secret two",
+  "Tags": [],
+  "Fingerprint": "191674506f36e32d49481606b8d13d35fec772df:app.env:lit-token:1",
+  "Lifecycle": {
+   "Status": "not-in-use",
+   "InUse": false,
+   "FirstSeen": {
+    "Commit": "191674506f36e32d49481606b8d13d35fec772df",
+    "Date": "2020-02-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "191674506f36e32d49481606b8d13d35fec772df",
+    "Date": "2020-02-01T00:00:00Z"
+   },
+   "Commits": 1,
+   "Files": 1,
+   "BranchCount": 1,
+   "TagCount": 0,
+   "MergedBranches": 1,
+   "HistoricalBranches": 0,
+   "HistoryComplete": true
+  }
+ },
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 7,
+  "EndColumn": 18,
+  "Match": "LCK_AAAA1111",
+  "Secret": "LCK_AAAA1111",
+  "File": "app.env",
+  "SymlinkFile": "",
+  "Commit": "d2923f111ce1c2cd98d5a2c20234d80a47a6681c",
+  "Entropy": 2.251629,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-01-01T00:00:00Z",
+  "Message": "add secret one",
+  "Tags": [],
+  "Fingerprint": "d2923f111ce1c2cd98d5a2c20234d80a47a6681c:app.env:lit-token:1",
+  "Lifecycle": {
+   "Status": "not-in-use",
+   "InUse": false,
+   "FirstSeen": {
+    "Commit": "d2923f111ce1c2cd98d5a2c20234d80a47a6681c",
+    "Date": "2020-01-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "d2923f111ce1c2cd98d5a2c20234d80a47a6681c",
+    "Date": "2020-01-01T00:00:00Z"
+   },
+   "Commits": 1,
+   "Files": 1,
+   "BranchCount": 1,
+   "TagCount": 0,
+   "MergedBranches": 1,
+   "HistoricalBranches": 0,
+   "HistoryComplete": true
+  }
+ }
+]

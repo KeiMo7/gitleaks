@@ -1,0 +1,13 @@
+{
+ "SchemaVersion": 1,
+ "Generator": "gitleaks/lifecycle",
+ "Source": "git",
+ "Repository": {"DefaultBranch":"main","Tip":"db422f35dbff003fe20ae79fceaf6687645bd302","TipDate":"2020-05-01T00:00:00Z","RootCommits":["402a8287280692bbea9b050c94f6969c54384b58"],"Shallow":false,"HistoryComplete":true},
+ "History": {"Complete":true},
+ "Diagnostics": {"CommandFailures":0,"CommandTimeouts":0,"RefErrors":0,"ObjectErrors":0,"SkippedLargeBlobs":0,"SkippedLargeFragments":0,"ScanErrors":0,"RefAnalysisLimited":false,"TipScanFailed":false},
+ "Secrets": [
+  {"SecretID":"glsk_5cij47d6y2h7ewu7sn4azppw22gh6zsm2edh7xlhr5rjquiavxua","RuleID":"lit-token","Status":"not-in-use","InUse":false,"FirstSeen":{"Commit":"731d7c21753765af1c97b754cfe0084437aafb04","Date":"2020-02-01T00:00:00Z"},"LastSeen":{"Commit":"731d7c21753765af1c97b754cfe0084437aafb04","Date":"2020-02-01T00:00:00Z"},"Commits":1,"Files":1,"BranchCount":2,"TagCount":0,"MergedBranches":2,"HistoricalBranches":0,"HistoryComplete":true,"Refs":[{"Name":"main","Type":"branch","Merged":true,"Tip":"db422f35dbff003fe20ae79fceaf6687645bd302"},{"Name":"merged-feature","Type":"branch","Merged":true,"Tip":"731d7c21753765af1c97b754cfe0084437aafb04"}],"MergedRefs":["main","merged-feature"],"Locations":[{"Commit":"731d7c21753765af1c97b754cfe0084437aafb04","Date":"2020-02-01T00:00:00Z","File":"merged.env","StartLine":1,"EndLine":1,"StartColumn":7,"EndColumn":18}]},
+  {"SecretID":"glsk_6l64dkujayjzbubmvcwmp3nkfz37ptxfblmwhlesf4n6lekucj5a","RuleID":"lit-token","Status":"not-in-use","InUse":false,"FirstSeen":{"Commit":"ecbaf6f70c7e7b1b1db4c91b13fd719365ee6d0f","Date":"2020-03-01T00:00:00Z"},"LastSeen":{"Commit":"ecbaf6f70c7e7b1b1db4c91b13fd719365ee6d0f","Date":"2020-03-01T00:00:00Z"},"Commits":1,"Files":1,"BranchCount":1,"TagCount":0,"MergedBranches":0,"HistoricalBranches":1,"HistoryComplete":true,"Refs":[{"Name":"unmerged-feature","Type":"branch","Merged":false,"Tip":"ecbaf6f70c7e7b1b1db4c91b13fd719365ee6d0f"}],"HistoricalRefs":["unmerged-feature"],"Locations":[{"Commit":"ecbaf6f70c7e7b1b1db4c91b13fd719365ee6d0f","Date":"2020-03-01T00:00:00Z","File":"unmerged.env","StartLine":1,"EndLine":1,"StartColumn":7,"EndColumn":18}]}
+ ],
+ "Summary": {"Secrets":2,"Entries":2,"InUse":0,"NotInUse":2,"Unknown":0,"NoHistory":0,"Occurrences":2}
+}

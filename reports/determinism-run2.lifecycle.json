@@ -1,0 +1,13 @@
+{
+ "SchemaVersion": 1,
+ "Generator": "gitleaks/lifecycle",
+ "Source": "git",
+ "Repository": {"DefaultBranch":"main","Tip":"093df962dc3c2fe514eba91c43b701efaeb2f869","TipDate":"2020-03-01T00:00:00Z","RootCommits":["2d2cae1da116026a124239475b91677771356e9b"],"Shallow":false,"HistoryComplete":true},
+ "History": {"Complete":true},
+ "Diagnostics": {"CommandFailures":0,"CommandTimeouts":0,"RefErrors":0,"ObjectErrors":0,"SkippedLargeBlobs":0,"SkippedLargeFragments":0,"ScanErrors":0,"RefAnalysisLimited":false,"TipScanFailed":false},
+ "Secrets": [
+  {"SecretID":"glsk_esqh3zpm4pgvew7jskpze7xkqj3gueua4bhxtmo7upzfdfhbxsjq","RuleID":"lit-token","Status":"not-in-use","InUse":false,"FirstSeen":{"Commit":"81aaab46c0341f4ee3893eee996e1ff22386df68","Date":"2020-02-01T00:00:00Z"},"LastSeen":{"Commit":"81aaab46c0341f4ee3893eee996e1ff22386df68","Date":"2020-02-01T00:00:00Z"},"Commits":1,"Files":1,"BranchCount":1,"TagCount":0,"MergedBranches":1,"HistoricalBranches":0,"HistoryComplete":true,"Refs":[{"Name":"main","Type":"branch","Merged":true,"Tip":"093df962dc3c2fe514eba91c43b701efaeb2f869"}],"MergedRefs":["main"],"Locations":[{"Commit":"81aaab46c0341f4ee3893eee996e1ff22386df68","Date":"2020-02-01T00:00:00Z","File":"a.env","StartLine":1,"EndLine":1,"StartColumn":7,"EndColumn":18}]},
+  {"SecretID":"glsk_j4iyxpeh6flyqu2fd77zg3cidjman26hp26c2tvjjcvlnwa6vmwq","RuleID":"lit-token","Status":"not-in-use","InUse":false,"FirstSeen":{"Commit":"2d2cae1da116026a124239475b91677771356e9b","Date":"2020-01-01T00:00:00Z"},"LastSeen":{"Commit":"2d2cae1da116026a124239475b91677771356e9b","Date":"2020-01-01T00:00:00Z"},"Commits":1,"Files":1,"BranchCount":1,"TagCount":0,"MergedBranches":1,"HistoricalBranches":0,"HistoryComplete":true,"Refs":[{"Name":"main","Type":"branch","Merged":true,"Tip":"093df962dc3c2fe514eba91c43b701efaeb2f869"}],"MergedRefs":["main"],"Locations":[{"Commit":"2d2cae1da116026a124239475b91677771356e9b","Date":"2020-01-01T00:00:00Z","File":"a.env","StartLine":1,"EndLine":1,"StartColumn":7,"EndColumn":18}]}
+ ],
+ "Summary": {"Secrets":2,"Entries":2,"InUse":0,"NotInUse":2,"Unknown":0,"NoHistory":0,"Occurrences":2}
+}

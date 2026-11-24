@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/zricethezav/gitleaks/v8/lifecycle"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
@@ -49,6 +50,16 @@ type Finding struct {
 	// Fragment used for multi-part rule checking, CEL filtering,
 	// and eventually ML validation
 	Fragment *sources.Fragment `json:",omitempty"`
+
+	// Lifecycle is an optional, additive summary of how this secret has
+	// changed over history. It is appended after all existing fields so
+	// existing consumers see an unchanged prefix.
+	Lifecycle *lifecycle.Info `json:",omitempty"`
+
+	// LifecycleSecretID is the salted identifier captured before redaction so
+	// lifecycle correlation survives --redact. It is not serialized here;
+	// the identifier appears in the lifecycle report and in Lifecycle.
+	LifecycleSecretID string `json:"-"`
 
 	// TODO keeping private for now to during experimental phase
 	requiredFindings []*RequiredFinding

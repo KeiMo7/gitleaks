@@ -1,0 +1,71 @@
+{
+  "description": "Machine-checked conclusions from the captured end-to-end reports.",
+  "checks": [
+    {
+      "report": "add-rotate-delete.lifecycle.json",
+      "rule": "lit-token",
+      "entries": 2,
+      "statuses": [
+        "not-in-use",
+        "not-in-use"
+      ],
+      "firstSeenDistinct": true
+    },
+    {
+      "report": "rename-encoded.lifecycle.json",
+      "rule": "lit-token",
+      "entries": 1,
+      "statuses": [
+        "in-use"
+      ],
+      "files": [
+        "configs/old.env"
+      ],
+      "locations": 4
+    },
+    {
+      "report": "branches.lifecycle.json",
+      "rule": "lit-token",
+      "entries": 2,
+      "statuses": [
+        "not-in-use",
+        "not-in-use"
+      ],
+      "mergedRefs": [
+        "main",
+        "merged-feature"
+      ],
+      "historicalRefs": [
+        "unmerged-feature"
+      ]
+    },
+    {
+      "report": "directory.lifecycle.json",
+      "rule": "lit-token",
+      "entries": 1,
+      "statuses": [
+        "no-history"
+      ],
+      "historyComplete": false
+    },
+    {
+      "report": "shallow.lifecycle.json",
+      "rule": "lit-token",
+      "entries": 1,
+      "statuses": [
+        "in-use"
+      ],
+      "historyComplete": false,
+      "shallow": true
+    },
+    {
+      "report": "restricted-history.lifecycle.json",
+      "rule": "lit-token",
+      "entries": 1,
+      "statuses": [
+        "unknown"
+      ],
+      "historyComplete": false
+    }
+  ]
+}

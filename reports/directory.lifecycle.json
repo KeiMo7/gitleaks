@@ -1,0 +1,12 @@
+{
+ "SchemaVersion": 1,
+ "Generator": "gitleaks/lifecycle",
+ "Source": "directory",
+ "Repository": {"Shallow":false,"HistoryComplete":false},
+ "History": {"Complete":false,"Reasons":["directory scan has no git history"]},
+ "Diagnostics": {"CommandFailures":0,"CommandTimeouts":0,"RefErrors":0,"ObjectErrors":0,"SkippedLargeBlobs":0,"SkippedLargeFragments":0,"ScanErrors":0,"RefAnalysisLimited":false,"TipScanFailed":false},
+ "Secrets": [
+  {"SecretID":"glsk_hseiooy4dkb7d6a4saqbmqybyrqcgqggrdjzxec2s7rbrisncrna","RuleID":"lit-token","Status":"no-history","FirstSeen":{"Commit":"","Date":""},"LastSeen":{"Commit":"","Date":""},"Commits":0,"Files":1,"BranchCount":0,"TagCount":0,"MergedBranches":0,"HistoricalBranches":0,"HistoryComplete":false,"Locations":[{"File":"app.env","StartLine":1,"EndLine":1,"StartColumn":7,"EndColumn":18}]}
+ ],
+ "Summary": {"Secrets":1,"Entries":1,"InUse":0,"NotInUse":0,"Unknown":0,"NoHistory":1,"Occurrences":1}
+}

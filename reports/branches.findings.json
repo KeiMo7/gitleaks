@@ -1,0 +1,80 @@
+[
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 7,
+  "EndColumn": 18,
+  "Match": "LCK_CCCC3333",
+  "Secret": "LCK_CCCC3333",
+  "File": "merged.env",
+  "SymlinkFile": "",
+  "Commit": "731d7c21753765af1c97b754cfe0084437aafb04",
+  "Entropy": 1.9508258,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-02-01T00:00:00Z",
+  "Message": "merged feature secret",
+  "Tags": [],
+  "Fingerprint": "731d7c21753765af1c97b754cfe0084437aafb04:merged.env:lit-token:1",
+  "Lifecycle": {
+   "Status": "not-in-use",
+   "InUse": false,
+   "FirstSeen": {
+    "Commit": "731d7c21753765af1c97b754cfe0084437aafb04",
+    "Date": "2020-02-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "731d7c21753765af1c97b754cfe0084437aafb04",
+    "Date": "2020-02-01T00:00:00Z"
+   },
+   "Commits": 1,
+   "Files": 1,
+   "BranchCount": 2,
+   "TagCount": 0,
+   "MergedBranches": 2,
+   "HistoricalBranches": 0,
+   "HistoryComplete": true
+  }
+ },
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 7,
+  "EndColumn": 18,
+  "Match": "LCK_DDDD4444",
+  "Secret": "LCK_DDDD4444",
+  "File": "unmerged.env",
+  "SymlinkFile": "",
+  "Commit": "ecbaf6f70c7e7b1b1db4c91b13fd719365ee6d0f",
+  "Entropy": 2.251629,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-03-01T00:00:00Z",
+  "Message": "unmerged feature secret",
+  "Tags": [],
+  "Fingerprint": "ecbaf6f70c7e7b1b1db4c91b13fd719365ee6d0f:unmerged.env:lit-token:1",
+  "Lifecycle": {
+   "Status": "not-in-use",
+   "InUse": false,
+   "FirstSeen": {
+    "Commit": "ecbaf6f70c7e7b1b1db4c91b13fd719365ee6d0f",
+    "Date": "2020-03-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "ecbaf6f70c7e7b1b1db4c91b13fd719365ee6d0f",
+    "Date": "2020-03-01T00:00:00Z"
+   },
+   "Commits": 1,
+   "Files": 1,
+   "BranchCount": 1,
+   "TagCount": 0,
+   "MergedBranches": 0,
+   "HistoricalBranches": 1,
+   "HistoryComplete": true
+  }
+ }
+]

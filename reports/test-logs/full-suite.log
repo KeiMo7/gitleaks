@@ -1,0 +1,904 @@
+?   	github.com/zricethezav/gitleaks/v8	[no test files]
+?   	github.com/zricethezav/gitleaks/v8/cmd	[no test files]
+?   	github.com/zricethezav/gitleaks/v8/cmd/generate/config	[no test files]
+=== RUN   TestConfigAllowlistRegexes
+=== RUN   TestConfigAllowlistRegexes/interpolated_variables_-_github_actions
+=== RUN   TestConfigAllowlistRegexes/interpolated_variables_-_nuget
+=== RUN   TestConfigAllowlistRegexes/miscellaneous_-_file_paths
+=== RUN   TestConfigAllowlistRegexes/interpolated_variables_-_string_fmt_-_golang
+=== RUN   TestConfigAllowlistRegexes/interpolated_variables_-_string_fmt_-_python
+=== RUN   TestConfigAllowlistRegexes/interpolated_variables_-_ucd
+=== RUN   TestConfigAllowlistRegexes/general_placeholders
+=== RUN   TestConfigAllowlistRegexes/general_placeholders_-_repeated_characters
+=== RUN   TestConfigAllowlistRegexes/environment_variables
+=== RUN   TestConfigAllowlistRegexes/interpolated_variables_-_ansible
+--- PASS: TestConfigAllowlistRegexes (0.00s)
+    --- PASS: TestConfigAllowlistRegexes/interpolated_variables_-_github_actions (0.00s)
+    --- PASS: TestConfigAllowlistRegexes/interpolated_variables_-_nuget (0.00s)
+    --- PASS: TestConfigAllowlistRegexes/miscellaneous_-_file_paths (0.00s)
+    --- PASS: TestConfigAllowlistRegexes/interpolated_variables_-_string_fmt_-_golang (0.00s)
+    --- PASS: TestConfigAllowlistRegexes/interpolated_variables_-_string_fmt_-_python (0.00s)
+    --- PASS: TestConfigAllowlistRegexes/interpolated_variables_-_ucd (0.00s)
+    --- PASS: TestConfigAllowlistRegexes/general_placeholders (0.00s)
+    --- PASS: TestConfigAllowlistRegexes/general_placeholders_-_repeated_characters (0.00s)
+    --- PASS: TestConfigAllowlistRegexes/environment_variables (0.00s)
+    --- PASS: TestConfigAllowlistRegexes/interpolated_variables_-_ansible (0.00s)
+=== RUN   TestConfigAllowlistPaths
+=== RUN   TestConfigAllowlistPaths/javascript_-_common_static_assets
+=== RUN   TestConfigAllowlistPaths/python
+--- PASS: TestConfigAllowlistPaths (0.00s)
+    --- PASS: TestConfigAllowlistPaths/javascript_-_common_static_assets (0.00s)
+    --- PASS: TestConfigAllowlistPaths/python (0.00s)
+PASS
+ok  	github.com/zricethezav/gitleaks/v8/cmd/generate/config/base	0.006s
+?   	github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules	[no test files]
+=== RUN   TestGenerateSemiGenericRegex
+=== RUN   TestGenerateSemiGenericRegex/secret_is_case_sensitive,_if_isCaseInsensitive_is_false
+=== RUN   TestGenerateSemiGenericRegex/secret_is_case_insensitive,_if_isCaseInsensitive_is_true
+=== RUN   TestGenerateSemiGenericRegex/identifier_is_case_insensitive,_regardless_of_isCaseInsensitive
+=== RUN   TestGenerateSemiGenericRegex/identifier_can_be_case_sensitive
+=== RUN   TestGenerateSemiGenericRegex/identifier_can_be_part_of_a_longer_word
+=== RUN   TestGenerateSemiGenericRegex/identifier_may_be_followed_by_specific_characters
+=== RUN   TestGenerateSemiGenericRegex/identifier_and_secret_must_be_separated_by_specific_operators
+=== RUN   TestGenerateSemiGenericRegex/secret_is_limited_by_specific_boundaries
+--- PASS: TestGenerateSemiGenericRegex (0.00s)
+    --- PASS: TestGenerateSemiGenericRegex/secret_is_case_sensitive,_if_isCaseInsensitive_is_false (0.00s)
+    --- PASS: TestGenerateSemiGenericRegex/secret_is_case_insensitive,_if_isCaseInsensitive_is_true (0.00s)
+    --- PASS: TestGenerateSemiGenericRegex/identifier_is_case_insensitive,_regardless_of_isCaseInsensitive (0.00s)
+    --- PASS: TestGenerateSemiGenericRegex/identifier_can_be_case_sensitive (0.00s)
+    --- PASS: TestGenerateSemiGenericRegex/identifier_can_be_part_of_a_longer_word (0.00s)
+    --- PASS: TestGenerateSemiGenericRegex/identifier_may_be_followed_by_specific_characters (0.00s)
+    --- PASS: TestGenerateSemiGenericRegex/identifier_and_secret_must_be_separated_by_specific_operators (0.00s)
+    --- PASS: TestGenerateSemiGenericRegex/secret_is_limited_by_specific_boundaries (0.00s)
+=== RUN   TestGenerateUniqueTokenRegex
+=== RUN   TestGenerateUniqueTokenRegex/case_sensitive_secret
+=== RUN   TestGenerateUniqueTokenRegex/case_insensitive_secret
+=== RUN   TestGenerateUniqueTokenRegex/allowed_boundaries
+--- PASS: TestGenerateUniqueTokenRegex (0.00s)
+    --- PASS: TestGenerateUniqueTokenRegex/case_sensitive_secret (0.00s)
+    --- PASS: TestGenerateUniqueTokenRegex/case_insensitive_secret (0.00s)
+    --- PASS: TestGenerateUniqueTokenRegex/allowed_boundaries (0.00s)
+PASS
+ok  	github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils	0.010s
+?   	github.com/zricethezav/gitleaks/v8/cmd/generate/secrets	[no test files]
+?   	github.com/zricethezav/gitleaks/v8/cmd/scm	[no test files]
+=== RUN   TestCommitAllowed
+--- PASS: TestCommitAllowed (0.00s)
+=== RUN   TestRegexAllowed
+--- PASS: TestRegexAllowed (0.00s)
+=== RUN   TestPathAllowed
+--- PASS: TestPathAllowed (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+=== RUN   TestTranslate
+=== RUN   TestTranslate/generic
+=== RUN   TestTranslate/valid/rule_path_only
+=== RUN   TestTranslate/valid/rule_regex_escaped_character_group
+=== RUN   TestTranslate/valid/rule_entropy_group
+=== RUN   TestTranslate/invalid/rule_missing_id
+=== RUN   TestTranslate/invalid/rule_no_regex_or_path
+=== RUN   TestTranslate/invalid/rule_bad_entropy_group
+--- PASS: TestTranslate (0.01s)
+    --- PASS: TestTranslate/generic (0.00s)
+    --- PASS: TestTranslate/valid/rule_path_only (0.00s)
+    --- PASS: TestTranslate/valid/rule_regex_escaped_character_group (0.00s)
+    --- PASS: TestTranslate/valid/rule_entropy_group (0.00s)
+    --- PASS: TestTranslate/invalid/rule_missing_id (0.00s)
+    --- PASS: TestTranslate/invalid/rule_no_regex_or_path (0.00s)
+    --- PASS: TestTranslate/invalid/rule_bad_entropy_group (0.00s)
+=== RUN   TestTranslateAllowlists
+=== RUN   TestTranslateAllowlists/valid/allowlist_global_old_compat
+=== RUN   TestTranslateAllowlists/valid/allowlist_global_multiple
+=== RUN   TestTranslateAllowlists/valid/allowlist_global_target_rules
+=== RUN   TestTranslateAllowlists/valid/allowlist_global_regex
+=== RUN   TestTranslateAllowlists/invalid/allowlist_global_empty
+=== RUN   TestTranslateAllowlists/invalid/allowlist_global_old_and_new
+=== RUN   TestTranslateAllowlists/invalid/allowlist_global_target_rule_id
+=== RUN   TestTranslateAllowlists/invalid/allowlist_global_regextarget
+=== RUN   TestTranslateAllowlists/valid/allowlist_rule_old_compat
+=== RUN   TestTranslateAllowlists/valid/allowlist_rule_regex
+=== RUN   TestTranslateAllowlists/valid/allowlist_rule_commit
+=== RUN   TestTranslateAllowlists/valid/allowlist_rule_path
+=== RUN   TestTranslateAllowlists/invalid/allowlist_rule_empty
+=== RUN   TestTranslateAllowlists/invalid/allowlist_rule_old_and_new
+=== RUN   TestTranslateAllowlists/invalid/allowlist_rule_regextarget
+--- PASS: TestTranslateAllowlists (0.01s)
+    --- PASS: TestTranslateAllowlists/valid/allowlist_global_old_compat (0.00s)
+    --- PASS: TestTranslateAllowlists/valid/allowlist_global_multiple (0.00s)
+    --- PASS: TestTranslateAllowlists/valid/allowlist_global_target_rules (0.00s)
+    --- PASS: TestTranslateAllowlists/valid/allowlist_global_regex (0.00s)
+    --- PASS: TestTranslateAllowlists/invalid/allowlist_global_empty (0.00s)
+    --- PASS: TestTranslateAllowlists/invalid/allowlist_global_old_and_new (0.00s)
+    --- PASS: TestTranslateAllowlists/invalid/allowlist_global_target_rule_id (0.00s)
+    --- PASS: TestTranslateAllowlists/invalid/allowlist_global_regextarget (0.00s)
+    --- PASS: TestTranslateAllowlists/valid/allowlist_rule_old_compat (0.00s)
+    --- PASS: TestTranslateAllowlists/valid/allowlist_rule_regex (0.00s)
+    --- PASS: TestTranslateAllowlists/valid/allowlist_rule_commit (0.00s)
+    --- PASS: TestTranslateAllowlists/valid/allowlist_rule_path (0.00s)
+    --- PASS: TestTranslateAllowlists/invalid/allowlist_rule_empty (0.00s)
+    --- PASS: TestTranslateAllowlists/invalid/allowlist_rule_old_and_new (0.00s)
+    --- PASS: TestTranslateAllowlists/invalid/allowlist_rule_regextarget (0.00s)
+=== RUN   TestTranslateExtend
+=== RUN   TestTranslateExtend/valid/extend
+=== RUN   TestTranslateExtend/valid/extend_disabled
+=== RUN   TestTranslateExtend/valid/extend_rule_no_regexpath
+=== RUN   TestTranslateExtend/valid/extend_rule_override_description
+=== RUN   TestTranslateExtend/valid/extend_rule_override_path
+=== RUN   TestTranslateExtend/valid/extend_rule_override_regex
+=== RUN   TestTranslateExtend/valid/extend_rule_override_secret_group
+=== RUN   TestTranslateExtend/valid/extend_rule_override_entropy
+=== RUN   TestTranslateExtend/valid/extend_rule_override_keywords
+=== RUN   TestTranslateExtend/valid/extend_rule_override_tags
+=== RUN   TestTranslateExtend/valid/extend_rule_allowlist_or
+=== RUN   TestTranslateExtend/valid/extend_rule_allowlist_and
+=== RUN   TestTranslateExtend/invalid/extend_invalid_ruleid
+--- PASS: TestTranslateExtend (0.05s)
+    --- PASS: TestTranslateExtend/valid/extend (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_disabled (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_rule_no_regexpath (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_rule_override_description (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_rule_override_path (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_rule_override_regex (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_rule_override_secret_group (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_rule_override_entropy (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_rule_override_keywords (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_rule_override_tags (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_rule_allowlist_or (0.00s)
+    --- PASS: TestTranslateExtend/valid/extend_rule_allowlist_and (0.00s)
+    --- PASS: TestTranslateExtend/invalid/extend_invalid_ruleid (0.02s)
+=== RUN   TestExtendedRuleKeywordsAreDowncase
+=== RUN   TestExtendedRuleKeywordsAreDowncase/Extend_base_rule_that_includes_AWS_keyword_with_new_attribute
+=== RUN   TestExtendedRuleKeywordsAreDowncase/Extend_base_with_a_new_rule_with_CMS_keyword
+--- PASS: TestExtendedRuleKeywordsAreDowncase (0.00s)
+    --- PASS: TestExtendedRuleKeywordsAreDowncase/Extend_base_rule_that_includes_AWS_keyword_with_new_attribute (0.00s)
+    --- PASS: TestExtendedRuleKeywordsAreDowncase/Extend_base_with_a_new_rule_with_CMS_keyword (0.00s)
+PASS
+ok  	github.com/zricethezav/gitleaks/v8/config	0.065s
+=== RUN   TestIsNew
+=== PAUSE TestIsNew
+=== RUN   TestFileLoadBaseline
+=== PAUSE TestFileLoadBaseline
+=== RUN   TestIgnoreIssuesInBaseline
+=== PAUSE TestIgnoreIssuesInBaseline
+=== RUN   TestDetect
+=== RUN   TestDetect/allowlist_-_ignore_commit
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m/home/wll/uid85/testdata/config/valid/allowlist_rule_commit.toml
+[90m8:57AM[0m [34mTRC[0m skipping file: rule allowlist [36mallowed-commit=[0mtrue [36mcommit=[0mallowthiscommit [36mcondition=[0mOR [36mpath=[0mtmp.go [36mrule-id=[0maws-access-key
+=== RUN   TestDetect/invalid_allow_comment
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m/home/wll/uid85/testdata/config/simple.toml
+=== RUN   TestDetect/detect_finding_-_sidekiq_url
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m/home/wll/uid85/testdata/config/simple.toml
+=== RUN   TestDetect/rule_-_match_based_on_entropy
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m/home/wll/uid85/testdata/config/valid/rule_entropy_group.toml
+[90m8:57AM[0m [34mTRC[0m skipping finding: low entropy [36mentropy=[0m0 [36mfinding=[0maaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa [36mpath=[0mtmp.go [36mrule-id=[0mdiscord-api-key
+=== RUN   TestDetect/global_allowlist_-_detect_path,_doesn't_match_all_conditions
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m/home/wll/uid85/testdata/config/valid/allowlist_global_multiple.toml
+=== RUN   TestDetect/valid_allow_comment_(2)
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m/home/wll/uid85/testdata/config/simple.toml
+[90m8:57AM[0m [34mTRC[0m skipping finding: 'gitleaks:allow' signature [36mfinding=[0mAKIALALEMEL33243OKIA [36mpath=[0mtmp.go [36mrule-id=[0maws-access-key
+=== RUN   TestDetect/ignore_finding_-_allowlist_regex
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m/home/wll/uid85/testdata/config/generic_with_py_path.toml
+[90m8:57AM[0m [34mTRC[0m skipping finding: global allowlist [36mallowed-regex=[0mtrue [36mcondition=[0mOR [36mfinding=[0mload2523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5 [36mpath=[0mtmp.py [36mrule-id=[0mgeneric-api-key
+=== RUN   TestDetect/allowlist_-_ignore_path_when_extending
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m/home/wll/uid85/testdata/config/valid/allowlist_rule_extend_default.toml
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m DBG extending config with default config
+[90m8:57AM[0m [34mTRC[0m skipping file: rule allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0mpath/to/your/problematic/file.js [36mrule-id=[0mgeneric-api-key
+=== RUN   TestDetect/detect_finding_-_sidekiq_env_var,_semicolon
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+=== RUN   TestDetect/ignore_finding_-_our_config_file
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m skipping file: matches config or baseline path
+=== RUN   TestDetect/detect_finding_-_matches_path,regex,entropy
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+=== RUN   TestDetect/rule_-_detect_path_
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+=== RUN   TestDetect/global_allowlist_-_detect,_doesn't_match_all_conditions
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m skipping finding: global allowlist [36mallowed-regex=[0mtrue [36mcondition=[0mOR [36mfinding=[0mchangeit [36mpath=[0mconfig.txt [36mrule-id=[0mtest
+=== RUN   TestDetect/ignore_finding_-_doesn't_match_path
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+=== RUN   TestDetect/rule_-_ignore_path
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m skipping file: matches config or baseline path
+=== RUN   TestDetect/global_allowlist_-_ignore,_matches_all_conditions
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+=== RUN   TestDetect/allowlist_-_ignore_path
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m skipping file: rule allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0mtmp.go [36mrule-id=[0maws-access-key
+=== RUN   TestDetect/allowlist_-_ignore_regex
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-regex=[0mtrue [36mcondition=[0mOR [36mfinding=[0mAKIALALEMEL33243OLIA [36mpath=[0mtmp.go [36mrule-id=[0maws-access-key
+=== RUN   TestDetect/detect_finding_-_aws
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+=== RUN   TestDetect/detect_finding_-_sidekiq_env_var
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+=== RUN   TestDetect/fragment_level_composite
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG collected required rule findings [36mfindings=[0m1 [36mpath=[0m [36mrule-id=[0musername-rule
+[90m8:57AM[0m DBG multi-part rule satisfied [36mauxiliary-count=[0m1 [36mpath=[0m [36mprimary-line=[0m5 [36mprimary-rule=[0mprimary-rule [36mrule-id=[0mprimary-rule
+=== RUN   TestDetect/valid_allow_comment_(1)
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m skipping finding: 'gitleaks:allow' signature [36mfinding=[0mAKIALALEMEL33243OKIA [36mpath=[0mtmp.go [36mrule-id=[0maws-access-key
+=== RUN   TestDetect/detect_encoded
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG segment found: original=[180,372] pos=[180,372]: "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K" -> "-----BEGIN PRIVATE KEY-----\n435f/bRUBHrbHqLY/xS3I7Oth+8rgG+0tBwfMcbk05Sgxq6QUzSYIQAop+WvsTwk2sR+C38g0Mnb\nu+QDkg0spw==\n-----END PRIVATE KEY-----\n" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[429,465] pos=[429,465]: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" -> "{\"alg\":\"HS256\",\"typ\":\"JWT\"}" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[466,772] pos=[466,772]: "eyJzdWIiOiIxMjM0NTY3ODkwIiwiY29uZmlnIjoiVzJSbFptRjFiSFJkQ25KbFoybHZiaUE5SUhWekxXVmhjM1F0TWdwaGQzTmZZV05qWlhOelgydGxlVjlwWkNBOUlFRlRTVUZKVDFOR1QwUk9UamRNV0UweE1FcEpDbUYzYzE5elpXTnlaWFJmWVdOalpYTnpYMnRsZVNBOUlIZEtZV3h5V0ZWMGJrWkZUVWt2U3pkTlJFVk9SeTlpVUhoU1ptbERXVVZHVlVORWJFVllNVUVLIiwiaWF0IjoxNTE2MjM5MDIyfQ" -> "{\"sub\":\"1234567890\",\"config\":\"W2RlZmF1bHRdCnJlZ2lvbiA9IHVzLWVhc3QtMgphd3NfYWNjZXNzX2tleV9pZCA9IEFTSUFJT1NGT0ROTjdMWE0xMEpJCmF3c19zZWNyZXRfYWNjZXNzX2tleSA9IHdKYWxyWFV0bkZFTUkvSzdNREVORy9iUHhSZmlDWUVGVUNEbEVYMUEK\",\"iat\":1516239022}" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[967,983] pos=[967,983]: "c21hbGwtc2VjcmV0" -> "small-secret" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[1071,1103] pos=[1071,1103]: "ZGVjb2RlZC1zZWNyZXQtdmFsdWUwMA==" -> "decoded-secret-value00" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[1130,1178] pos=[1130,1178]: "c2VjcmV0PVpHVmpiMlJsWkMxelpXTnlaWFF0ZG1Gc2RXVT0=" -> "secret=ZGVjb2RlZC1zZWNyZXQtdmFsdWU=" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[1236,1292] pos=[1236,1292]: "bFJxQkstejVrZjQtcGxlYXNlLWlnbm9yZS1tZS1YLVhJSk0yUGRkdw==" -> "lRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[1347,1395] pos=[1347,1395]: "6465636F6465642D7365637265742D76616C756576484558" -> "decoded-secret-valuevHEX" [36mdecoder=[0mhex
+[90m8:57AM[0m DBG segment found: original=[1485,1503] pos=[1485,1503]: "%73%65%63%72%65%74" -> "secret" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[1540,1570] pos=[1540,1570]: "%64%65coded-%73%65%63%72%65%74" -> "decoded-secret" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[1808,1811] pos=[1808,1811]: "%4A" -> "J" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[1902,1905] pos=[1902,1905]: "%3d" -> "=" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2018,2039] pos=[2018,2039]: "%52lZC1zZWNyZXQtdm%46" -> "RlZC1zZWNyZXQtdmF" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2121,2165] pos=[2121,2165]: "ZGVjb2RlZC0lNzMlNjUlNjMlNzIlNjUlNzQtdmFsdWU=" -> "decoded-%73%65%63%72%65%74-value" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[2281,2358] pos=[2281,2358]: "%4EjMzMjU2NkE2MzZENTYzMDUwNTY3MDQ4%4eTY2RDcwNjk0RDY5NTUzMTRENkQ3ODYx%25%34%65" -> "NjMzMjU2NkE2MzZENTYzMDUwNTY3MDQ4NTY2RDcwNjk0RDY5NTUzMTRENkQ3ODYx%4e" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2621,2907] pos=[2621,2907]: "%25%32%35%25%33%32%25%33%35%25%32%35%25%33%33%25%33%35%25%32%35%25%33%33%25%33%36%25%32%35%25%33%32%25%33%35%25%32%35%25%33%33%25%33%36%25%32%35%25%33%36%25%33%31%25%32%35%25%33%32%25%33%35%25%32%35%25%33%33%25%33%36%25%32%35%25%33%33%25%33%322RlZC1zZWNyZXQtd%25%36%64%25%34%36%25%37%33" -> "%25%32%35%25%33%35%25%33%36%25%32%35%25%33%36%25%36%31%25%32%35%25%33%36%25%33%322RlZC1zZWNyZXQtd%6d%46%73" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2988,3066] pos=[2988,3066]: "%25%35%61%25%34%37%25%35%36jb2RlZC1zZWNyZXQtdmFsdWU%25%32%35%25%33%33%25%36%34" -> "%5a%47%56jb2RlZC1zZWNyZXQtdmFsdWU%25%33%64" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[3146,3227] pos=[3146,3227]: "%3D%25%35%61%25%34%37%25%35%36jb2RlZC1zZWNyZXQtdmFsdWU%25%32%35%25%33%33%25%36%34" -> "=%5a%47%56jb2RlZC1zZWNyZXQtdmFsdWU%25%33%64" [36mdecoder=[0mpercent
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-regex=[0mtrue [36mcondition=[0mOR [36mfinding=[0mlRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw [36mpath=[0mtmp.go [36mrule-id=[0mdecoded-password-ignore-secret
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-regex=[0mtrue [36mcondition=[0mOR [36mfinding=[0mlRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw [36mpath=[0mtmp.go [36mrule-id=[0mdecoded-password-ignore-match
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-regex=[0mtrue [36mcondition=[0mOR [36mfinding=[0mlRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw [36mpath=[0mtmp.go [36mrule-id=[0mdecoded-password-ignore-line
+[90m8:57AM[0m DBG segment found: original=[466,772] pos=[439,619]: "W2RlZmF1bHRdCnJlZ2lvbiA9IHVzLWVhc3QtMgphd3NfYWNjZXNzX2tleV9pZCA9IEFTSUFJT1NGT0ROTjdMWE0xMEpJCmF3c19zZWNyZXRfYWNjZXNzX2tleSA9IHdKYWxyWFV0bkZFTUkvSzdNREVORy9iUHhSZmlDWUVGVUNEbEVYMUEK" -> "[default]\nregion = us-east-2\naws_access_key_id = ASIAIOSFODNN7LXM10JI\naws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEFUCDlEX1A\n" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[1130,1178] pos=[989,1017]: "ZGVjb2RlZC1zZWNyZXQtdmFsdWU=" -> "decoded-secret-value" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[1790,1844] pos=[1561,1613]: "c2VjcmV0PVpHVmpiMlJsWkMxelpXTnlaWFF0ZG1Gc2RXVjJOQT09" -> "secret=ZGVjb2RlZC1zZWNyZXQtdmFsdWV2NA==" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[1902,1949] pos=[1672,1716]: "6465636F6465642D7365637265742D76616C75657635" -> "decoded-secret-valuev5" [36mdecoder=[0mhex
+[90m8:57AM[0m DBG segment found: original=[2012,2048] pos=[1779,1811]: "ZGVjb2RlZC1zZWNyZXQtdmFsdWV4ODY=" -> "decoded-secret-valuex86" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[2121,2165] pos=[1892,1910]: "%73%65%63%72%65%74" -> "secret" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2281,2358] pos=[2096,2099]: "%4e" -> "N" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2621,2907] pos=[2362,2468]: "%25%32%35%25%33%35%25%33%36%25%32%35%25%33%36%25%36%31%25%32%35%25%33%36%25%33%322RlZC1zZWNyZXQtd%6d%46%73" -> "%25%35%36%25%36%61%25%36%322RlZC1zZWNyZXQtdmFs" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2988,3066] pos=[2549,2591]: "%5a%47%56jb2RlZC1zZWNyZXQtdmFsdWU%25%33%64" -> "ZGVjb2RlZC1zZWNyZXQtdmFsdWU%3d" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[3146,3227] pos=[2672,2714]: "%5a%47%56jb2RlZC1zZWNyZXQtdmFsdWU%25%33%64" -> "ZGVjb2RlZC1zZWNyZXQtdmFsdWU%3d" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[1790,1844] pos=[1515,1547]: "ZGVjb2RlZC1zZWNyZXQtdmFsdWV2NA==" -> "decoded-secret-valuev4" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[2281,2437] pos=[1923,2067]: "NjMzMjU2NkE2MzZENTYzMDUwNTY3MDQ4NTY2RDcwNjk0RDY5NTUzMTRENkQ3ODYxNTE3QTQ2MzY1NzZDNjQ0RjY1NTY3MDU5NTU1ODUyNkI2MjUzNTUzMDRFNkU0RTZCNTYzMTU1MzkwQQ==" -> "6332566A636D563050567048566D70694D6955314D6D7861517A4636576C644F655670595558526B625355304E6E4E6B563155390A" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[2621,2907] pos=[2251,2278]: "%25%35%36%25%36%61%25%36%32" -> "%56%6a%62" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2988,3066] pos=[2405,2408]: "%3d" -> "=" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[3146,3227] pos=[2516,2519]: "%3d" -> "=" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2281,2437] pos=[1913,2019]: "6332566A636D563050567048566D70694D6955314D6D7861517A4636576C644F655670595558526B625355304E6E4E6B563155390A" -> "c2VjcmV0PVpHVmpiMiU1MmxaQzF6WldOeVpYUXRkbSU0NnNkV1U9\n" [36mdecoder=[0mhex
+[90m8:57AM[0m DBG segment found: original=[2621,2907] pos=[2203,2212]: "%56%6a%62" -> "Vjb" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2988,3066] pos=[2312,2340]: "ZGVjb2RlZC1zZWNyZXQtdmFsdWU=" -> "decoded-secret-value" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[3146,3227] pos=[2421,2449]: "ZGVjb2RlZC1zZWNyZXQtdmFsdWU=" -> "decoded-secret-value" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[2281,2437] pos=[1913,1965]: "c2VjcmV0PVpHVmpiMiU1MmxaQzF6WldOeVpYUXRkbSU0NnNkV1U9" -> "secret=ZGVjb2%52lZC1zZWNyZXQtdm%46sdWU=" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[2619,2911] pos=[2148,2176]: "ZGVjb2RlZC1zZWNyZXQtdmFsdWU=" -> "decoded-secret-value" [36mdecoder=[0mbase64
+[90m8:57AM[0m DBG segment found: original=[2281,2437] pos=[1926,1947]: "%52lZC1zZWNyZXQtdm%46" -> "RlZC1zZWNyZXQtdmF" [36mdecoder=[0mpercent
+[90m8:57AM[0m DBG segment found: original=[2281,2437] pos=[1920,1948]: "ZGVjb2RlZC1zZWNyZXQtdmFsdWU=" -> "decoded-secret-value" [36mdecoder=[0mbase64
+=== RUN   TestDetect/global_allowlist_-_ignore_regex
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+--- PASS: TestDetect (0.07s)
+    --- PASS: TestDetect/allowlist_-_ignore_commit (0.00s)
+    --- PASS: TestDetect/invalid_allow_comment (0.01s)
+    --- PASS: TestDetect/detect_finding_-_sidekiq_url (0.00s)
+    --- PASS: TestDetect/rule_-_match_based_on_entropy (0.00s)
+    --- PASS: TestDetect/global_allowlist_-_detect_path,_doesn't_match_all_conditions (0.00s)
+    --- PASS: TestDetect/valid_allow_comment_(2) (0.00s)
+    --- PASS: TestDetect/ignore_finding_-_allowlist_regex (0.00s)
+    --- PASS: TestDetect/allowlist_-_ignore_path_when_extending (0.02s)
+    --- PASS: TestDetect/detect_finding_-_sidekiq_env_var,_semicolon (0.00s)
+    --- PASS: TestDetect/ignore_finding_-_our_config_file (0.00s)
+    --- PASS: TestDetect/detect_finding_-_matches_path,regex,entropy (0.00s)
+    --- PASS: TestDetect/rule_-_detect_path_ (0.00s)
+    --- PASS: TestDetect/global_allowlist_-_detect,_doesn't_match_all_conditions (0.00s)
+    --- PASS: TestDetect/ignore_finding_-_doesn't_match_path (0.00s)
+    --- PASS: TestDetect/rule_-_ignore_path (0.00s)
+    --- PASS: TestDetect/global_allowlist_-_ignore,_matches_all_conditions (0.00s)
+    --- PASS: TestDetect/allowlist_-_ignore_path (0.00s)
+    --- PASS: TestDetect/allowlist_-_ignore_regex (0.00s)
+    --- PASS: TestDetect/detect_finding_-_aws (0.00s)
+    --- PASS: TestDetect/detect_finding_-_sidekiq_env_var (0.00s)
+    --- PASS: TestDetect/fragment_level_composite (0.00s)
+    --- PASS: TestDetect/valid_allow_comment_(1) (0.00s)
+    --- PASS: TestDetect/detect_encoded (0.01s)
+    --- PASS: TestDetect/global_allowlist_-_ignore_regex (0.00s)
+=== RUN   TestFromGit
+=== RUN   TestFromGit/simple/../testdata/repos/small/
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG found .gitleaksignore file [36mpath=[0m../testdata/repos/small/.gitleaksignore
+[90m8:57AM[0m DBG executing: /usr/bin/git -C ../testdata/repos/small log -p -U0 --full-history --all --diff-filter=tuxdb
+[90m8:57AM[0m DBG SCM platform parsed from host [36mhost=[0mgithub.com [36mplatform=[0mgithub
+[90m8:57AM[0m DBG skipping finding: fingerprint [36mfinding=[0mAKIALALEMEL33243OLIA [36mfingerprint=[0m53cd7a3c6eb4937f413e3c25e4a9f39289afa69e:api/ignoreCommit.go:aws-access-key:20
+[90m8:57AM[0m DBG skipping finding: global fingerprint [36mfinding=[0mAKIALALEMEL33243OLIA [36mfingerprint=[0mapi/ignoreGlobal.go:aws-access-key:20
+[90m8:57AM[0m [32mINF[0m [1m8 commits scanned.[0m
+[90m8:57AM[0m DBG Note: this number might be smaller than expected due to commits with no additions
+=== RUN   TestFromGit/simple/../testdata/repos/small/--all_foo...
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG found .gitleaksignore file [36mpath=[0m../testdata/repos/small/.gitleaksignore
+[90m8:57AM[0m DBG executing: /usr/bin/git -C ../testdata/repos/small log -p -U0 --all foo...
+[90m8:57AM[0m DBG SCM platform parsed from host [36mhost=[0mgithub.com [36mplatform=[0mgithub
+[90m8:57AM[0m DBG skipping finding: fingerprint [36mfinding=[0mAKIALALEMEL33243OLIA [36mfingerprint=[0m53cd7a3c6eb4937f413e3c25e4a9f39289afa69e:api/ignoreCommit.go:aws-access-key:20
+[90m8:57AM[0m DBG skipping finding: global fingerprint [36mfinding=[0mAKIALALEMEL33243OLIA [36mfingerprint=[0mapi/ignoreGlobal.go:aws-access-key:20
+[90m8:57AM[0m [32mINF[0m [1m3 commits scanned.[0m
+[90m8:57AM[0m DBG Note: this number might be smaller than expected due to commits with no additions
+=== RUN   TestFromGit/archives/../testdata/repos/archives/
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG found .gitleaksignore file [36mpath=[0m../testdata/repos/archives/.gitleaksignore
+[90m8:57AM[0m DBG executing: /usr/bin/git -C ../testdata/repos/archives log -p -U0 --full-history --all --diff-filter=tuxdb
+[90m8:57AM[0m DBG SCM platform parsed from host [36mhost=[0mgithub.com [36mplatform=[0mgithub
+[90m8:57AM[0m [32mINF[0m [1m5 commits scanned.[0m
+[90m8:57AM[0m DBG Note: this number might be smaller than expected due to commits with no additions
+--- PASS: TestFromGit (0.03s)
+    --- PASS: TestFromGit/simple/../testdata/repos/small/ (0.01s)
+    --- PASS: TestFromGit/simple/../testdata/repos/small/--all_foo... (0.01s)
+    --- PASS: TestFromGit/archives/../testdata/repos/archives/ (0.02s)
+=== RUN   TestFromGitStaged
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG found .gitleaksignore file [36mpath=[0m../testdata/repos/staged/.gitleaksignore
+[90m8:57AM[0m DBG executing: /usr/bin/git -C ../testdata/repos/staged diff -U0 --no-ext-diff --staged .
+[90m8:57AM[0m DBG SCM platform parsed from host [36mhost=[0mgithub.com [36mplatform=[0mgithub
+[90m8:57AM[0m DBG skipping finding: global fingerprint [36mfinding=[0mAKIALALEMEL33243OLIA [36mfingerprint=[0mapi/api.go:aws-access-key:6
+[90m8:57AM[0m [32mINF[0m [1m0 commits scanned.[0m
+[90m8:57AM[0m DBG Note: this number might be smaller than expected due to commits with no additions
+--- PASS: TestFromGitStaged (0.01s)
+=== RUN   TestFromFiles
+=== RUN   TestFromFiles/simple_-_../testdata/repos/nogit
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG found .gitleaksignore file [36mpath=[0m../testdata/repos/nogit/.gitleaksignore
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/repos/nogit/.gitleaksignore
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/repos/nogit/.env.prod
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/repos/nogit/main.go
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/repos/nogit/api.go
+[90m8:57AM[0m DBG skipping finding: global fingerprint [36mfinding=[0mAKIALALEMEL33243OLIA [36mfingerprint=[0m../testdata/repos/nogit/api.go:aws-access-key:20
+=== RUN   TestFromFiles/simple_-_../testdata/repos/nogit/main.go
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG found .gitleaksignore file [36mpath=[0m../testdata/repos/nogit/.gitleaksignore
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/repos/nogit/main.go
+=== RUN   TestFromFiles/simple_-_../testdata/repos/nogit/api.go
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG found .gitleaksignore file [36mpath=[0m../testdata/repos/nogit/.gitleaksignore
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/repos/nogit/api.go
+[90m8:57AM[0m DBG skipping finding: global fingerprint [36mfinding=[0mAKIALALEMEL33243OLIA [36mfingerprint=[0m../testdata/repos/nogit/api.go:aws-access-key:20
+=== RUN   TestFromFiles/generic_-_../testdata/repos/nogit/.env.prod
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG found .gitleaksignore file [36mpath=[0m../testdata/repos/nogit/.gitleaksignore
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/repos/nogit/.env.prod
+--- PASS: TestFromFiles (0.01s)
+    --- PASS: TestFromFiles/simple_-_../testdata/repos/nogit (0.00s)
+    --- PASS: TestFromFiles/simple_-_../testdata/repos/nogit/main.go (0.00s)
+    --- PASS: TestFromFiles/simple_-_../testdata/repos/nogit/api.go (0.00s)
+    --- PASS: TestFromFiles/generic_-_../testdata/repos/nogit/.env.prod (0.00s)
+=== RUN   TestDetectWithArchives
+=== RUN   TestDetectWithArchives/archives_-_../testdata/archives/this-path-does-not-exist
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [33mWRN[0m [1mskipping[0m [36merror=[0m[31m[1m"lstat ../testdata/archives/this-path-does-not-exist: no such file or directory"[0m[0m [36mpath=[0m../testdata/archives/this-path-does-not-exist
+=== RUN   TestDetectWithArchives/archives_-_../testdata/archives/files
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m DBG skipping file: global allowlist [36mpath=[0m../testdata/archives/files/.env.prod
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files/main.go.zst
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files/.gitleaksignore
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files/main.go
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files/main.go.xz
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files/api.go
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files/main.go.gz
+=== RUN   TestDetectWithArchives/archives_-_../testdata/archives/files.7z
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files.7z
+[90m8:57AM[0m DBG skipping file: global allowlist [36mpath=[0m../testdata/archives/files.7z
+=== RUN   TestDetectWithArchives/archives_-_../testdata/archives/files.tar
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files.tar
+[90m8:57AM[0m DBG skipping file: global allowlist [36mpath=[0m../testdata/archives/files.tar
+=== RUN   TestDetectWithArchives/archives_-_../testdata/archives/files.tar.xz
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files.tar.xz
+[90m8:57AM[0m DBG skipping file: global allowlist [36mpath=[0m../testdata/archives/files.tar.xz
+=== RUN   TestDetectWithArchives/archives_-_../testdata/archives/files.tar.zst
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files.tar.zst
+[90m8:57AM[0m DBG skipping file: global allowlist [36mpath=[0m../testdata/archives/files.tar.zst
+=== RUN   TestDetectWithArchives/archives_-_../testdata/archives/files.zip
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/files.zip
+[90m8:57AM[0m DBG skipping file: global allowlist [36mpath=[0m../testdata/archives/files.zip
+=== RUN   TestDetectWithArchives/archives_-_../testdata/archives/nested.tar.gz
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/archives/nested.tar.gz
+[90m8:57AM[0m [34mTRC[0m skipping file: global allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0m../testdata/archives/nested.tar.gz!archives/files.tar!files/.env.prod
+[90m8:57AM[0m [34mTRC[0m skipping file: global allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0m../testdata/archives/nested.tar.gz!archives/files.zip!files/.env.prod
+[90m8:57AM[0m [34mTRC[0m skipping file: global allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0m../testdata/archives/nested.tar.gz!archives/files.7z!files/.env.prod
+[90m8:57AM[0m [34mTRC[0m skipping file: global allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0m../testdata/archives/nested.tar.gz!archives/files.tar.zst!files/.env.prod
+[90m8:57AM[0m DBG skipping file: global allowlist [36mpath=[0m../testdata/archives/nested.tar.gz
+[90m8:57AM[0m [34mTRC[0m skipping file: global allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0m../testdata/archives/nested.tar.gz!archives/files.tar.xz!files/.env.prod
+=== RUN   TestDetectWithArchives/archives_-_../testdata/archives/nested.tar.gz#01
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+--- PASS: TestDetectWithArchives (0.01s)
+    --- PASS: TestDetectWithArchives/archives_-_../testdata/archives/this-path-does-not-exist (0.00s)
+    --- PASS: TestDetectWithArchives/archives_-_../testdata/archives/files (0.00s)
+    --- PASS: TestDetectWithArchives/archives_-_../testdata/archives/files.7z (0.00s)
+    --- PASS: TestDetectWithArchives/archives_-_../testdata/archives/files.tar (0.00s)
+    --- PASS: TestDetectWithArchives/archives_-_../testdata/archives/files.tar.xz (0.00s)
+    --- PASS: TestDetectWithArchives/archives_-_../testdata/archives/files.tar.zst (0.00s)
+    --- PASS: TestDetectWithArchives/archives_-_../testdata/archives/files.zip (0.00s)
+    --- PASS: TestDetectWithArchives/archives_-_../testdata/archives/nested.tar.gz (0.00s)
+    --- PASS: TestDetectWithArchives/archives_-_../testdata/archives/nested.tar.gz#01 (0.00s)
+=== RUN   TestDetectWithSymlinks
+[90m8:57AM[0m DBG no minVersion specified in config... consider adding minVersion to ensure compatibility. [36mconfig path=[0m
+[90m8:57AM[0m [34mTRC[0m scanning path [36mpath=[0m../testdata/repos/symlinks/source_file/id_ed25519
+--- PASS: TestDetectWithSymlinks (0.00s)
+=== RUN   TestDetectRuleAllowlist
+=== RUN   TestDetectRuleAllowlist/regex_AND_stopword_allowed_-_other_conditions
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-commit=[0m [36mallowed-path=[0mtrue [36mallowed-regex=[0mtrue [36mallowed-stopword=[0m2024 [36mcommit=[0m41edf1f7f612199f401ccfc3144c2ebd0d7aeb48 [36mcondition=[0mAND [36mfinding=[0mSummer2024! [36mpath=[0mconfig.js [36mrule-id=[0mtest-rule
+=== RUN   TestDetectRuleAllowlist/regex_AND_stopword_NOT_allowed_-_non-git,_other_conditions
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestDetectRuleAllowlist/commit_allowed
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m [34mTRC[0m skipping file: rule allowlist [36mallowed-commit=[0mtrue [36mcommit=[0m41edf1f7f612199f401ccfc3144c2ebd0d7aeb48 [36mcondition=[0mOR [36mpath=[0m [36mrule-id=[0mtest-rule
+=== RUN   TestDetectRuleAllowlist/commit_AND_path_NOT_allowed
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestDetectRuleAllowlist/regex_AND_stopword_allowed
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-regex=[0mtrue [36mallowed-stopword=[0m2024 [36mcondition=[0mAND [36mfinding=[0mSummer2024! [36mpath=[0m [36mrule-id=[0mtest-rule
+=== RUN   TestDetectRuleAllowlist/regex_AND_stopword_NOT_allowed
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestDetectRuleAllowlist/regex_AND_stopword_NOT_allowed_-_other_conditions
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestDetectRuleAllowlist/regex_OR_stopword_allowed
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-regex=[0mtrue [36mcondition=[0mOR [36mfinding=[0mSummer2024! [36mpath=[0m [36mrule-id=[0mtest-rule
+=== RUN   TestDetectRuleAllowlist/path_allowed
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m [34mTRC[0m skipping file: rule allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0mpackage-lock.json [36mrule-id=[0mtest-rule
+=== RUN   TestDetectRuleAllowlist/commit_AND_path_allowed
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m [34mTRC[0m skipping file: rule allowlist [36mallowed-commit=[0mtrue [36mallowed-path=[0mtrue [36mcommit=[0m41edf1f7f612199f401ccfc3144c2ebd0d7aeb48 [36mcondition=[0mAND [36mpath=[0mpackage-lock.json [36mrule-id=[0mtest-rule
+=== RUN   TestDetectRuleAllowlist/commit_AND_path_NOT_allowed_-_other_conditions
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestDetectRuleAllowlist/commit_OR_path_allowed
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m [34mTRC[0m skipping file: rule allowlist [36mallowed-path=[0mtrue [36mcommit=[0m41edf1f7f612199f401ccfc3144c2ebd0d7aeb48 [36mcondition=[0mOR [36mpath=[0mpackage-lock.json [36mrule-id=[0mtest-rule
+=== RUN   TestDetectRuleAllowlist/regex_allowed
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-regex=[0mtrue [36mcondition=[0mOR [36mfinding=[0mSummer2024! [36mpath=[0m [36mrule-id=[0mtest-rule
+=== RUN   TestDetectRuleAllowlist/stopwords_allowed
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-stopword=[0msummer [36mcondition=[0mOR [36mfinding=[0mSummer2024! [36mpath=[0m [36mrule-id=[0mtest-rule
+--- PASS: TestDetectRuleAllowlist (0.26s)
+    --- PASS: TestDetectRuleAllowlist/regex_AND_stopword_allowed_-_other_conditions (0.02s)
+    --- PASS: TestDetectRuleAllowlist/regex_AND_stopword_NOT_allowed_-_non-git,_other_conditions (0.03s)
+    --- PASS: TestDetectRuleAllowlist/commit_allowed (0.02s)
+    --- PASS: TestDetectRuleAllowlist/commit_AND_path_NOT_allowed (0.02s)
+    --- PASS: TestDetectRuleAllowlist/regex_AND_stopword_allowed (0.03s)
+    --- PASS: TestDetectRuleAllowlist/regex_AND_stopword_NOT_allowed (0.02s)
+    --- PASS: TestDetectRuleAllowlist/regex_AND_stopword_NOT_allowed_-_other_conditions (0.01s)
+    --- PASS: TestDetectRuleAllowlist/regex_OR_stopword_allowed (0.01s)
+    --- PASS: TestDetectRuleAllowlist/path_allowed (0.02s)
+    --- PASS: TestDetectRuleAllowlist/commit_AND_path_allowed (0.02s)
+    --- PASS: TestDetectRuleAllowlist/commit_AND_path_NOT_allowed_-_other_conditions (0.02s)
+    --- PASS: TestDetectRuleAllowlist/commit_OR_path_allowed (0.02s)
+    --- PASS: TestDetectRuleAllowlist/regex_allowed (0.01s)
+    --- PASS: TestDetectRuleAllowlist/stopwords_allowed (0.01s)
+=== RUN   TestNormalizeGitleaksIgnorePaths
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m DBG found .gitleaksignore file [36mpath=[0m../testdata/gitleaksignore/.windowspaths
+--- PASS: TestNormalizeGitleaksIgnorePaths (0.02s)
+=== RUN   TestWindowsFileSeparator_RulePath
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestWindowsFileSeparator_RulePath/unix_rule_-_unix_path_separator
+=== RUN   TestWindowsFileSeparator_RulePath/unix_rule_-_windows_path_separator
+=== RUN   TestWindowsFileSeparator_RulePath/unix_regex+path_rule_-_windows_path_separator
+=== RUN   TestWindowsFileSeparator_RulePath/windows_rule_-_unix_path_separator
+=== RUN   TestWindowsFileSeparator_RulePath/windows_rule_-_windows_path_separator
+=== RUN   TestWindowsFileSeparator_RulePath/windows_regex+path_rule_-_windows_path_separator
+--- PASS: TestWindowsFileSeparator_RulePath (0.03s)
+    --- PASS: TestWindowsFileSeparator_RulePath/unix_rule_-_unix_path_separator (0.00s)
+    --- PASS: TestWindowsFileSeparator_RulePath/unix_rule_-_windows_path_separator (0.00s)
+    --- PASS: TestWindowsFileSeparator_RulePath/unix_regex+path_rule_-_windows_path_separator (0.00s)
+    --- PASS: TestWindowsFileSeparator_RulePath/windows_rule_-_unix_path_separator (0.00s)
+    --- PASS: TestWindowsFileSeparator_RulePath/windows_rule_-_windows_path_separator (0.00s)
+    --- PASS: TestWindowsFileSeparator_RulePath/windows_regex+path_rule_-_windows_path_separator (0.00s)
+=== RUN   TestWindowsFileSeparator_RuleAllowlistPaths
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestWindowsFileSeparator_RuleAllowlistPaths/windows_path_separator_-_unix_rule_-_AND_allowlist_path+stopwords
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-path=[0mtrue [36mallowed-stopword=[0mf4k3 [36mcondition=[0mAND [36mfinding=[0m"value: \"f4k3s3cr3t\"" [36mpath=[0mignoreme/unix.txt [36mrule-id=[0munix-rule
+=== RUN   TestWindowsFileSeparator_RuleAllowlistPaths/windows_path_separator_-_windows_rule_-_AND_allowlist_path+stopwords
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-path=[0mtrue [36mallowed-stopword=[0mf4k3 [36mcondition=[0mAND [36mfinding=[0m"value: \"f4k3s3cr3t\"" [36mpath=[0mignoreme/unix.txt [36mrule-id=[0mwindows-rule
+=== RUN   TestWindowsFileSeparator_RuleAllowlistPaths/unix_path_separator_-_unix_rule_-_OR_allowlist_path-only
+[90m8:57AM[0m [34mTRC[0m skipping file: rule allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0mignoreme/unix.txt [36mrule-id=[0munix-rule
+=== RUN   TestWindowsFileSeparator_RuleAllowlistPaths/unix_path_separator_-_windows_rule_-_OR_allowlist_path-only
+=== RUN   TestWindowsFileSeparator_RuleAllowlistPaths/unix_path_separator_-_unix_rule_-_AND_allowlist_path+stopwords
+[90m8:57AM[0m [34mTRC[0m skipping finding: rule allowlist [36mallowed-path=[0mtrue [36mallowed-stopword=[0mf4k3 [36mcondition=[0mAND [36mfinding=[0m"value: \"f4k3s3cr3t\"" [36mpath=[0mignoreme/unix.txt [36mrule-id=[0munix-rule
+=== RUN   TestWindowsFileSeparator_RuleAllowlistPaths/unix_path_separator_-_windows_rule_-_AND_allowlist_path+stopwords
+=== RUN   TestWindowsFileSeparator_RuleAllowlistPaths/windows_path_separator_-_unix_rule_-_OR_allowlist_path-only
+[90m8:57AM[0m [34mTRC[0m skipping file: rule allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0mignoreme/windows.txt [36mrule-id=[0munix-rule
+=== RUN   TestWindowsFileSeparator_RuleAllowlistPaths/windows_path_separator_-_windows_rule_-_OR_allowlist_path-only
+[90m8:57AM[0m [34mTRC[0m skipping file: rule allowlist [36mallowed-path=[0mtrue [36mcondition=[0mOR [36mpath=[0mignoreme/windows.txt [36mrule-id=[0mwindows-rule
+--- PASS: TestWindowsFileSeparator_RuleAllowlistPaths (0.02s)
+    --- PASS: TestWindowsFileSeparator_RuleAllowlistPaths/windows_path_separator_-_unix_rule_-_AND_allowlist_path+stopwords (0.00s)
+    --- PASS: TestWindowsFileSeparator_RuleAllowlistPaths/windows_path_separator_-_windows_rule_-_AND_allowlist_path+stopwords (0.00s)
+    --- PASS: TestWindowsFileSeparator_RuleAllowlistPaths/unix_path_separator_-_unix_rule_-_OR_allowlist_path-only (0.00s)
+    --- PASS: TestWindowsFileSeparator_RuleAllowlistPaths/unix_path_separator_-_windows_rule_-_OR_allowlist_path-only (0.00s)
+    --- PASS: TestWindowsFileSeparator_RuleAllowlistPaths/unix_path_separator_-_unix_rule_-_AND_allowlist_path+stopwords (0.00s)
+    --- PASS: TestWindowsFileSeparator_RuleAllowlistPaths/unix_path_separator_-_windows_rule_-_AND_allowlist_path+stopwords (0.00s)
+    --- PASS: TestWindowsFileSeparator_RuleAllowlistPaths/windows_path_separator_-_unix_rule_-_OR_allowlist_path-only (0.00s)
+    --- PASS: TestWindowsFileSeparator_RuleAllowlistPaths/windows_path_separator_-_windows_rule_-_OR_allowlist_path-only (0.00s)
+=== RUN   TestGetLocation
+--- PASS: TestGetLocation (0.00s)
+=== RUN   TestDetectReader
+=== RUN   TestDetectReader/Test_case_-_Reader_returns_n_>_0_bytes_and_nil_error
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestDetectReader/Test_case_-_Reader_returns_n_>_0_bytes_and_io.EOF_error
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+--- PASS: TestDetectReader (0.04s)
+    --- PASS: TestDetectReader/Test_case_-_Reader_returns_n_>_0_bytes_and_nil_error (0.02s)
+    --- PASS: TestDetectReader/Test_case_-_Reader_returns_n_>_0_bytes_and_io.EOF_error (0.02s)
+=== RUN   TestStreamDetectReader
+=== RUN   TestStreamDetectReader/Single_secret_streaming
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestStreamDetectReader/Empty_reader
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestStreamDetectReader/Reader_returns_error
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestStreamDetectReader/Multiple_secrets_with_larger_buffer
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestStreamDetectReader/Mock_reader_with_EOF
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestStreamDetectReader/Secret_split_across_boundary
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+=== RUN   TestStreamDetectReader/Reader_returns_error_after_first_read
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+--- PASS: TestStreamDetectReader (0.13s)
+    --- PASS: TestStreamDetectReader/Single_secret_streaming (0.02s)
+    --- PASS: TestStreamDetectReader/Empty_reader (0.02s)
+    --- PASS: TestStreamDetectReader/Reader_returns_error (0.01s)
+    --- PASS: TestStreamDetectReader/Multiple_secrets_with_larger_buffer (0.01s)
+    --- PASS: TestStreamDetectReader/Mock_reader_with_EOF (0.01s)
+    --- PASS: TestStreamDetectReader/Secret_split_across_boundary (0.03s)
+    --- PASS: TestStreamDetectReader/Reader_returns_error_after_first_read (0.02s)
+=== RUN   Test_createScmLink
+=== RUN   Test_createScmLink/gitea_-_markdown
+=== RUN   Test_createScmLink/bitbucket_-_single_line
+=== RUN   Test_createScmLink/github_-_multi_line
+=== RUN   Test_createScmLink/github_-_markdown
+=== RUN   Test_createScmLink/gitlab_-_single_line
+=== RUN   Test_createScmLink/gitlab_-_multi_line
+=== RUN   Test_createScmLink/azuredevops_-_single_line
+=== RUN   Test_createScmLink/gitea_-_single_line
+=== RUN   Test_createScmLink/gitea-_multi_line
+=== RUN   Test_createScmLink/bitbucket-_multi_line
+=== RUN   Test_createScmLink/no_platform
+=== RUN   Test_createScmLink/github_-_single_line
+=== RUN   Test_createScmLink/github_-_jupyter_notebook
+=== RUN   Test_createScmLink/azuredevops_-_multi_line
+--- PASS: Test_createScmLink (0.00s)
+    --- PASS: Test_createScmLink/gitea_-_markdown (0.00s)
+    --- PASS: Test_createScmLink/bitbucket_-_single_line (0.00s)
+    --- PASS: Test_createScmLink/github_-_multi_line (0.00s)
+    --- PASS: Test_createScmLink/github_-_markdown (0.00s)
+    --- PASS: Test_createScmLink/gitlab_-_single_line (0.00s)
+    --- PASS: Test_createScmLink/gitlab_-_multi_line (0.00s)
+    --- PASS: Test_createScmLink/azuredevops_-_single_line (0.00s)
+    --- PASS: Test_createScmLink/gitea_-_single_line (0.00s)
+    --- PASS: Test_createScmLink/gitea-_multi_line (0.00s)
+    --- PASS: Test_createScmLink/bitbucket-_multi_line (0.00s)
+    --- PASS: Test_createScmLink/no_platform (0.00s)
+    --- PASS: Test_createScmLink/github_-_single_line (0.00s)
+    --- PASS: Test_createScmLink/github_-_jupyter_notebook (0.00s)
+    --- PASS: Test_createScmLink/azuredevops_-_multi_line (0.00s)
+=== CONT  TestIsNew
+=== RUN   TestIsNew/not_new_-_redacted,_everything_else_matches
+=== CONT  TestIgnoreIssuesInBaseline
+=== RUN   TestIsNew/new_-_commit_doesn't_match_baseline
+=== CONT  TestFileLoadBaseline
+=== RUN   TestIsNew/new_-_redacted,_different_baseline
+=== RUN   TestIsNew/not_new_-_commit+author_matches
+--- PASS: TestFileLoadBaseline (0.00s)
+=== RUN   TestIsNew/not_new_-_commit+author_matches,_tags_ignored
+--- PASS: TestIsNew (0.00s)
+    --- PASS: TestIsNew/not_new_-_redacted,_everything_else_matches (0.00s)
+    --- PASS: TestIsNew/new_-_commit_doesn't_match_baseline (0.00s)
+    --- PASS: TestIsNew/new_-_redacted,_different_baseline (0.00s)
+    --- PASS: TestIsNew/not_new_-_commit+author_matches (0.00s)
+    --- PASS: TestIsNew/not_new_-_commit+author_matches,_tags_ignored (0.00s)
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m DBG skipping finding: baseline [36mfinding=[0m [36mfingerprint=[0m5:::0
+[90m8:57AM[0m DBG dev build, skipping config version check. [36mrequired=[0mv8.25.0
+[90m8:57AM[0m DBG skipping finding: baseline [36mfinding=[0m [36mfingerprint=[0m5:::0
+--- PASS: TestIgnoreIssuesInBaseline (0.03s)
+PASS
+ok  	github.com/zricethezav/gitleaks/v8/detect	0.666s
+=== RUN   TestDecode
+=== RUN   TestDecode/only_b64_chunk
+=== RUN   TestDecode/mixed_content
+=== RUN   TestDecode/no_chunk
+=== RUN   TestDecode/env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle)
+=== RUN   TestDecode/has_longer_b64_inside
+=== RUN   TestDecode/many_possible_i_:=_0substrings
+=== RUN   TestDecode/b64-url-safe:_only_b64_chunk
+=== RUN   TestDecode/b64-url-safe:_mixed_content
+=== RUN   TestDecode/b64-url-safe:_env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle)
+=== RUN   TestDecode/b64-url-safe:_has_longer_b64_inside
+=== RUN   TestDecode/b64-url-safe:_hyphen_url_b64
+=== RUN   TestDecode/b64-url-safe:_underscore_url_b64
+=== RUN   TestDecode/invalid_base64_string
+=== RUN   TestDecode/url_encoded_value
+=== RUN   TestDecode/hex_encoded_value
+=== RUN   TestDecode/unicode_encoded_value
+=== RUN   TestDecode/unicode_encoded_value_backslashed
+=== RUN   TestDecode/unicode_encoded_value_backslashed_mixed_w/_hex
+=== RUN   TestDecode/only_b64_chunk#01
+=== RUN   TestDecode/mixed_content#01
+=== RUN   TestDecode/no_chunk#01
+=== RUN   TestDecode/env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle)#01
+=== RUN   TestDecode/has_longer_b64_inside#01
+=== RUN   TestDecode/many_possible_i_:=_0substrings#01
+=== RUN   TestDecode/b64-url-safe:_only_b64_chunk#01
+=== RUN   TestDecode/b64-url-safe:_mixed_content#01
+=== RUN   TestDecode/b64-url-safe:_env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle)#01
+=== RUN   TestDecode/b64-url-safe:_has_longer_b64_inside#01
+=== RUN   TestDecode/b64-url-safe:_hyphen_url_b64#01
+=== RUN   TestDecode/b64-url-safe:_underscore_url_b64#01
+=== RUN   TestDecode/invalid_base64_string#01
+=== RUN   TestDecode/url_encoded_value#01
+=== RUN   TestDecode/hex_encoded_value#01
+=== RUN   TestDecode/unicode_encoded_value#01
+=== RUN   TestDecode/unicode_encoded_value_backslashed#01
+=== RUN   TestDecode/unicode_encoded_value_backslashed_mixed_w/_hex#01
+=== RUN   TestDecode/only_b64_chunk#02
+=== RUN   TestDecode/mixed_content#02
+=== RUN   TestDecode/no_chunk#02
+=== RUN   TestDecode/env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle)#02
+=== RUN   TestDecode/has_longer_b64_inside#02
+=== RUN   TestDecode/many_possible_i_:=_0substrings#02
+=== RUN   TestDecode/b64-url-safe:_only_b64_chunk#02
+=== RUN   TestDecode/b64-url-safe:_mixed_content#02
+=== RUN   TestDecode/b64-url-safe:_env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle)#02
+=== RUN   TestDecode/b64-url-safe:_has_longer_b64_inside#02
+=== RUN   TestDecode/b64-url-safe:_hyphen_url_b64#02
+=== RUN   TestDecode/b64-url-safe:_underscore_url_b64#02
+=== RUN   TestDecode/invalid_base64_string#02
+=== RUN   TestDecode/url_encoded_value#02
+=== RUN   TestDecode/hex_encoded_value#02
+=== RUN   TestDecode/unicode_encoded_value#02
+=== RUN   TestDecode/unicode_encoded_value_backslashed#02
+=== RUN   TestDecode/unicode_encoded_value_backslashed_mixed_w/_hex#02
+--- PASS: TestDecode (0.00s)
+    --- PASS: TestDecode/only_b64_chunk (0.00s)
+    --- PASS: TestDecode/mixed_content (0.00s)
+    --- PASS: TestDecode/no_chunk (0.00s)
+    --- PASS: TestDecode/env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle) (0.00s)
+    --- PASS: TestDecode/has_longer_b64_inside (0.00s)
+    --- PASS: TestDecode/many_possible_i_:=_0substrings (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_only_b64_chunk (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_mixed_content (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle) (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_has_longer_b64_inside (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_hyphen_url_b64 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_underscore_url_b64 (0.00s)
+    --- PASS: TestDecode/invalid_base64_string (0.00s)
+    --- PASS: TestDecode/url_encoded_value (0.00s)
+    --- PASS: TestDecode/hex_encoded_value (0.00s)
+    --- PASS: TestDecode/unicode_encoded_value (0.00s)
+    --- PASS: TestDecode/unicode_encoded_value_backslashed (0.00s)
+    --- PASS: TestDecode/unicode_encoded_value_backslashed_mixed_w/_hex (0.00s)
+    --- PASS: TestDecode/only_b64_chunk#01 (0.00s)
+    --- PASS: TestDecode/mixed_content#01 (0.00s)
+    --- PASS: TestDecode/no_chunk#01 (0.00s)
+    --- PASS: TestDecode/env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle)#01 (0.00s)
+    --- PASS: TestDecode/has_longer_b64_inside#01 (0.00s)
+    --- PASS: TestDecode/many_possible_i_:=_0substrings#01 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_only_b64_chunk#01 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_mixed_content#01 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle)#01 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_has_longer_b64_inside#01 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_hyphen_url_b64#01 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_underscore_url_b64#01 (0.00s)
+    --- PASS: TestDecode/invalid_base64_string#01 (0.00s)
+    --- PASS: TestDecode/url_encoded_value#01 (0.00s)
+    --- PASS: TestDecode/hex_encoded_value#01 (0.00s)
+    --- PASS: TestDecode/unicode_encoded_value#01 (0.00s)
+    --- PASS: TestDecode/unicode_encoded_value_backslashed#01 (0.00s)
+    --- PASS: TestDecode/unicode_encoded_value_backslashed_mixed_w/_hex#01 (0.00s)
+    --- PASS: TestDecode/only_b64_chunk#02 (0.00s)
+    --- PASS: TestDecode/mixed_content#02 (0.00s)
+    --- PASS: TestDecode/no_chunk#02 (0.00s)
+    --- PASS: TestDecode/env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle)#02 (0.00s)
+    --- PASS: TestDecode/has_longer_b64_inside#02 (0.00s)
+    --- PASS: TestDecode/many_possible_i_:=_0substrings#02 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_only_b64_chunk#02 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_mixed_content#02 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_env_var_(looks_like_all_b64_decodable_but_has_`=`_in_the_middle)#02 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_has_longer_b64_inside#02 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_hyphen_url_b64#02 (0.00s)
+    --- PASS: TestDecode/b64-url-safe:_underscore_url_b64#02 (0.00s)
+    --- PASS: TestDecode/invalid_base64_string#02 (0.00s)
+    --- PASS: TestDecode/url_encoded_value#02 (0.00s)
+    --- PASS: TestDecode/hex_encoded_value#02 (0.00s)
+    --- PASS: TestDecode/unicode_encoded_value#02 (0.00s)
+    --- PASS: TestDecode/unicode_encoded_value_backslashed#02 (0.00s)
+    --- PASS: TestDecode/unicode_encoded_value_backslashed_mixed_w/_hex#02 (0.00s)
+PASS
+ok  	github.com/zricethezav/gitleaks/v8/detect/codec	0.008s
+=== RUN   TestCanonicalSecretForms
+=== RUN   TestCanonicalSecretForms/plain_and_trimmed
+=== RUN   TestCanonicalSecretForms/quotes
+=== RUN   TestCanonicalSecretForms/line_split
+=== RUN   TestCanonicalSecretForms/base64_wrapped
+=== RUN   TestCanonicalSecretForms/base64url_wrapped
+=== RUN   TestCanonicalSecretForms/hex_wrapped
+=== RUN   TestCanonicalSecretForms/percent_escaped
+=== RUN   TestCanonicalSecretForms/backslash_escapes
+=== RUN   TestCanonicalSecretForms/escaped_line_break
+=== RUN   TestCanonicalSecretForms/unicode_escape
+--- PASS: TestCanonicalSecretForms (0.00s)
+    --- PASS: TestCanonicalSecretForms/plain_and_trimmed (0.00s)
+    --- PASS: TestCanonicalSecretForms/quotes (0.00s)
+    --- PASS: TestCanonicalSecretForms/line_split (0.00s)
+    --- PASS: TestCanonicalSecretForms/base64_wrapped (0.00s)
+    --- PASS: TestCanonicalSecretForms/base64url_wrapped (0.00s)
+    --- PASS: TestCanonicalSecretForms/hex_wrapped (0.00s)
+    --- PASS: TestCanonicalSecretForms/percent_escaped (0.00s)
+    --- PASS: TestCanonicalSecretForms/backslash_escapes (0.00s)
+    --- PASS: TestCanonicalSecretForms/escaped_line_break (0.00s)
+    --- PASS: TestCanonicalSecretForms/unicode_escape (0.00s)
+=== RUN   TestCanonicalSecretDoesNotOverNormalize
+--- PASS: TestCanonicalSecretDoesNotOverNormalize (0.00s)
+=== RUN   TestHasherRepositoryScoped
+--- PASS: TestHasherRepositoryScoped (0.00s)
+=== RUN   TestHasherPepper
+--- PASS: TestHasherPepper (0.00s)
+=== RUN   TestRepoFingerprintIgnoresCheckoutPath
+--- PASS: TestRepoFingerprintIgnoresCheckoutPath (0.00s)
+=== RUN   TestRemoteURLCredentialsStripped
+--- PASS: TestRemoteURLCredentialsStripped (0.00s)
+=== RUN   TestSpoolGroupsAcrossRuns
+--- PASS: TestSpoolGroupsAcrossRuns (0.01s)
+=== RUN   TestSpoolDedupesExactLocations
+--- PASS: TestSpoolDedupesExactLocations (0.00s)
+=== RUN   TestSpoolRoundTrip
+--- PASS: TestSpoolRoundTrip (0.00s)
+=== RUN   TestSpoolEmptyIsSafe
+--- PASS: TestSpoolEmptyIsSafe (0.00s)
+=== RUN   TestAnalyzerNoHistoryReport
+--- PASS: TestAnalyzerNoHistoryReport (0.00s)
+=== RUN   TestAnalyzerDeterministic
+--- PASS: TestAnalyzerDeterministic (0.01s)
+=== RUN   TestAnalyzerRuleSeparation
+--- PASS: TestAnalyzerRuleSeparation (0.00s)
+=== RUN   TestSpoolMemoryBounded
+--- PASS: TestSpoolMemoryBounded (0.01s)
+=== RUN   TestSpoolMergeBoundedFanIn
+--- PASS: TestSpoolMergeBoundedFanIn (0.08s)
+=== RUN   TestLifecycleCorruptObjectContinues
+--- PASS: TestLifecycleCorruptObjectContinues (0.67s)
+=== RUN   TestLifecycleLogOptsLimitsConclusion
+--- PASS: TestLifecycleLogOptsLimitsConclusion (0.07s)
+=== RUN   TestLifecycleNoFindings
+--- PASS: TestLifecycleNoFindings (0.04s)
+=== RUN   TestLifecycleSameDigestTwoRules
+--- PASS: TestLifecycleSameDigestTwoRules (0.05s)
+=== RUN   TestLifecycleMultipleHitsOneCommit
+--- PASS: TestLifecycleMultipleHitsOneCommit (0.05s)
+=== RUN   TestLifecycleCSVAppendsColumns
+--- PASS: TestLifecycleCSVAppendsColumns (0.06s)
+=== RUN   TestLifecycleStableAcrossReclone
+--- PASS: TestLifecycleStableAcrossReclone (0.11s)
+=== RUN   TestLifecycleAdded
+--- PASS: TestLifecycleAdded (0.06s)
+=== RUN   TestLifecycleRotated
+--- PASS: TestLifecycleRotated (0.06s)
+=== RUN   TestLifecycleDeleted
+--- PASS: TestLifecycleDeleted (0.06s)
+=== RUN   TestLifecycleRenamed
+--- PASS: TestLifecycleRenamed (0.07s)
+=== RUN   TestLifecycleAcrossBranchMerge
+--- PASS: TestLifecycleAcrossBranchMerge (0.09s)
+=== RUN   TestLifecycleUnmergedBranch
+--- PASS: TestLifecycleUnmergedBranch (0.07s)
+=== RUN   TestLifecycleEncodedAndSplit
+--- PASS: TestLifecycleEncodedAndSplit (0.07s)
+=== RUN   TestLifecycleNoHistoryDirectory
+--- PASS: TestLifecycleNoHistoryDirectory (0.01s)
+=== RUN   TestLifecycleShallowClone
+--- PASS: TestLifecycleShallowClone (0.08s)
+=== RUN   TestLifecycleDeterministic
+--- PASS: TestLifecycleDeterministic (0.20s)
+=== RUN   TestReportCompatibility
+--- PASS: TestReportCompatibility (0.06s)
+=== RUN   TestLifecycleSuppressionUnchanged
+--- PASS: TestLifecycleSuppressionUnchanged (0.05s)
+=== RUN   TestLifecycleExitCodeUnchanged
+--- PASS: TestLifecycleExitCodeUnchanged (0.08s)
+=== RUN   TestLifecycleRedactKeepsIdentity
+--- PASS: TestLifecycleRedactKeepsIdentity (0.08s)
+PASS
+ok  	github.com/zricethezav/gitleaks/v8/lifecycle	2.207s
+?   	github.com/zricethezav/gitleaks/v8/logging	[no test files]
+?   	github.com/zricethezav/gitleaks/v8/regexp	[no test files]
+=== RUN   TestWriteCSV
+=== RUN   TestWriteCSV/simple
+=== RUN   TestWriteCSV/empty
+--- PASS: TestWriteCSV (0.00s)
+    --- PASS: TestWriteCSV/simple (0.00s)
+    --- PASS: TestWriteCSV/empty (0.00s)
+=== RUN   TestRedact
+--- PASS: TestRedact (0.00s)
+=== RUN   TestMask
+=== RUN   TestMask/normal_secret
+=== RUN   TestMask/empty_secret
+=== RUN   TestMask/short_secret
+--- PASS: TestMask (0.00s)
+    --- PASS: TestMask/normal_secret (0.00s)
+    --- PASS: TestMask/empty_secret (0.00s)
+    --- PASS: TestMask/short_secret (0.00s)
+=== RUN   TestMaskSecret
+=== RUN   TestMaskSecret/normal_masking
+=== RUN   TestMaskSecret/high_masking
+=== RUN   TestMaskSecret/low_masking
+=== RUN   TestMaskSecret/invalid_masking
+--- PASS: TestMaskSecret (0.00s)
+    --- PASS: TestMaskSecret/normal_masking (0.00s)
+    --- PASS: TestMaskSecret/high_masking (0.00s)
+    --- PASS: TestMaskSecret/low_masking (0.00s)
+    --- PASS: TestMaskSecret/invalid_masking (0.00s)
+=== RUN   TestWriteJSON
+=== RUN   TestWriteJSON/simple
+=== RUN   TestWriteJSON/empty
+--- PASS: TestWriteJSON (0.00s)
+    --- PASS: TestWriteJSON/simple (0.00s)
+    --- PASS: TestWriteJSON/empty (0.00s)
+=== RUN   TestWriteJunit
+--- PASS: TestWriteJunit (0.00s)
+=== RUN   TestWriteStdout
+--- PASS: TestWriteStdout (0.00s)
+=== RUN   TestWriteSarif
+=== RUN   TestWriteSarif/simple
+--- PASS: TestWriteSarif (0.00s)
+    --- PASS: TestWriteSarif/simple (0.00s)
+=== RUN   TestWriteTemplate
+=== RUN   TestWriteTemplate/markdown
+=== RUN   TestWriteTemplate/jsonextra
+--- PASS: TestWriteTemplate (0.00s)
+    --- PASS: TestWriteTemplate/markdown (0.00s)
+    --- PASS: TestWriteTemplate/jsonextra (0.00s)
+=== RUN   TestTemplateDangerousFunctions
+=== RUN   TestTemplateDangerousFunctions/env_is_blocked
+=== RUN   TestTemplateDangerousFunctions/expandenv_is_blocked
+=== RUN   TestTemplateDangerousFunctions/getHostByName_is_blocked
+=== RUN   TestTemplateDangerousFunctions/now_is_allowed_(benign)
+--- PASS: TestTemplateDangerousFunctions (0.01s)
+    --- PASS: TestTemplateDangerousFunctions/env_is_blocked (0.00s)
+    --- PASS: TestTemplateDangerousFunctions/expandenv_is_blocked (0.00s)
+    --- PASS: TestTemplateDangerousFunctions/getHostByName_is_blocked (0.00s)
+    --- PASS: TestTemplateDangerousFunctions/now_is_allowed_(benign) (0.00s)
+PASS
+ok  	github.com/zricethezav/gitleaks/v8/report	0.026s
+=== RUN   Test_readUntilSafeBoundary
+=== RUN   Test_readUntilSafeBoundary/safe_original_split_-_LF
+    common_test.go:68: abc
+        
+        
+=== RUN   Test_readUntilSafeBoundary/safe_original_split_-_CRLF
+    common_test.go:68: a
+        
+        
+=== RUN   Test_readUntilSafeBoundary/safe_split_-_LF
+    common_test.go:68: abcdefg
+        hijklmnop
+        
+        
+=== RUN   Test_readUntilSafeBoundary/safe_split_-_CRLF
+    common_test.go:68: abcdefg
+        hijklmnop
+        
+        
+=== RUN   Test_readUntilSafeBoundary/safe_split_-_blank_line
+    common_test.go:68: abcdefg
+        hijklmnop
+        	  	
+        
+=== RUN   Test_readUntilSafeBoundary/no_safe_split
+    common_test.go:68: abcdefg
+        hijklmnopqrstuvwx
+--- PASS: Test_readUntilSafeBoundary (0.00s)
+    --- PASS: Test_readUntilSafeBoundary/safe_original_split_-_LF (0.00s)
+    --- PASS: Test_readUntilSafeBoundary/safe_original_split_-_CRLF (0.00s)
+    --- PASS: Test_readUntilSafeBoundary/safe_split_-_LF (0.00s)
+    --- PASS: Test_readUntilSafeBoundary/safe_split_-_CRLF (0.00s)
+    --- PASS: Test_readUntilSafeBoundary/safe_split_-_blank_line (0.00s)
+    --- PASS: Test_readUntilSafeBoundary/no_safe_split (0.00s)
+PASS
+ok  	github.com/zricethezav/gitleaks/v8/sources	0.005s
+?   	github.com/zricethezav/gitleaks/v8/version	[no test files]

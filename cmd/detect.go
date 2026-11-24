@@ -25,6 +25,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
+	"github.com/zricethezav/gitleaks/v8/detect"
+	"github.com/zricethezav/gitleaks/v8/lifecycle"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -59,6 +61,26 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// create detector
 	detector := Detector(cmd, cfg, sourcePath)
+
+	lifecycleKind := lifecycle.KindGit
+	lifecycleName := "detect"
+	if mustGetBoolFlag(cmd, "no-git") {
+		lifecycleKind = lifecycle.KindDirectory
+	} else if mustGetBoolFlag(cmd, "pipe") {
+		lifecycleKind = lifecycle.KindStdin
+	}
+	session := newLifecycleSession(cmd, lifecycleKind, sourcePath, lifecycleName)
+	if session != nil {
+		session.attach(detector)
+		session.newDetector = func() *detect.Detector {
+			fresh := Detector(cmd, cfg, sourcePath)
+			fresh.ReportPath = ""
+			fresh.Reporter = nil
+			fresh.Lifecycle = nil
+			fresh.Verbose = false
+			return fresh
+		}
+	}
 
 	// parse flags
 	detector.FollowSymlinks = mustGetBoolFlag(cmd, "follow-symlinks")
@@ -130,6 +152,10 @@ func runDetect(cmd *cobra.Command, args []string) {
 			// don't exit on error, just log it
 			logging.Error().Err(err).Msg("failed to scan Git repository")
 		}
+	}
+
+	if session != nil {
+		session.finish(cmd.Context(), detector, findings)
 	}
 
 	findingSummaryAndExit(detector, findings, exitCode, start, err)

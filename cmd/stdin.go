@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/zricethezav/gitleaks/v8/lifecycle"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
@@ -33,6 +34,11 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 	// create detector
 	detector := Detector(cmd, cfg, "")
 
+	session := newLifecycleSession(cmd, lifecycle.KindStdin, "", "stdin")
+	if session != nil {
+		session.attach(detector)
+	}
+
 	// parse flag(s)
 	exitCode := mustGetIntFlag(cmd, "exit-code")
 
@@ -48,6 +54,10 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 		// log fatal to exit, no need to continue since a report will not be
 		// generated when scanning from a pipe...for now
 		logging.Fatal().Err(err).Msg("failed scan input from stdin")
+	}
+
+	if session != nil {
+		session.finish(cmd.Context(), detector, findings)
 	}
 
 	findingSummaryAndExit(detector, findings, exitCode, start, err)

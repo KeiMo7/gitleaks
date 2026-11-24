@@ -1,0 +1,40 @@
+[
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 7,
+  "EndColumn": 18,
+  "Match": "LCK_EEEE5555",
+  "Secret": "LCK_EEEE5555",
+  "File": "app.env",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 2.251629,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "app.env:lit-token:1",
+  "Lifecycle": {
+   "Status": "no-history",
+   "FirstSeen": {
+    "Commit": "",
+    "Date": ""
+   },
+   "LastSeen": {
+    "Commit": "",
+    "Date": ""
+   },
+   "Commits": 0,
+   "Files": 1,
+   "BranchCount": 0,
+   "TagCount": 0,
+   "MergedBranches": 0,
+   "HistoricalBranches": 0,
+   "HistoryComplete": false
+  }
+ }
+]

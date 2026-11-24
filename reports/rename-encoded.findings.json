@@ -1,0 +1,161 @@
+[
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 7,
+  "EndColumn": 18,
+  "Match": "LCK_AAAA1111",
+  "Secret": "LCK_AAAA1111",
+  "File": "configs/old.env",
+  "SymlinkFile": "",
+  "Commit": "72c31d7b15b1c7444c68a4f8f8a247505c835cda",
+  "Entropy": 2.251629,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-01-01T00:00:00Z",
+  "Message": "add",
+  "Tags": [],
+  "Fingerprint": "72c31d7b15b1c7444c68a4f8f8a247505c835cda:configs/old.env:lit-token:1",
+  "Lifecycle": {
+   "Status": "in-use",
+   "InUse": true,
+   "FirstSeen": {
+    "Commit": "72c31d7b15b1c7444c68a4f8f8a247505c835cda",
+    "Date": "2020-01-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "766fe5dcc05f1ef366e8075c544ac59be5b121d6",
+    "Date": "2020-03-01T00:00:00Z"
+   },
+   "Commits": 2,
+   "Files": 1,
+   "BranchCount": 1,
+   "TagCount": 0,
+   "MergedBranches": 1,
+   "HistoricalBranches": 0,
+   "HistoryComplete": true
+  }
+ },
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 13,
+  "EndColumn": 24,
+  "Match": "LCK_AAAA1111",
+  "Secret": "LCK_AAAA1111",
+  "File": "configs/new.env",
+  "SymlinkFile": "",
+  "Commit": "766fe5dcc05f1ef366e8075c544ac59be5b121d6",
+  "Entropy": 2.251629,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-03-01T00:00:00Z",
+  "Message": "encoded and split forms",
+  "Tags": [],
+  "Fingerprint": "766fe5dcc05f1ef366e8075c544ac59be5b121d6:configs/new.env:lit-token:1",
+  "Lifecycle": {
+   "Status": "in-use",
+   "InUse": true,
+   "FirstSeen": {
+    "Commit": "72c31d7b15b1c7444c68a4f8f8a247505c835cda",
+    "Date": "2020-01-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "766fe5dcc05f1ef366e8075c544ac59be5b121d6",
+    "Date": "2020-03-01T00:00:00Z"
+   },
+   "Commits": 2,
+   "Files": 1,
+   "BranchCount": 1,
+   "TagCount": 0,
+   "MergedBranches": 1,
+   "HistoricalBranches": 0,
+   "HistoryComplete": true
+  }
+ },
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 2,
+  "EndLine": 2,
+  "StartColumn": 6,
+  "EndColumn": 21,
+  "Match": "LCK_AAAA1111",
+  "Secret": "LCK_AAAA1111",
+  "File": "configs/new.env",
+  "SymlinkFile": "",
+  "Commit": "766fe5dcc05f1ef366e8075c544ac59be5b121d6",
+  "Entropy": 2.251629,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-03-01T00:00:00Z",
+  "Message": "encoded and split forms",
+  "Tags": [
+   "decoded:base64",
+   "decode-depth:1"
+  ],
+  "Fingerprint": "766fe5dcc05f1ef366e8075c544ac59be5b121d6:configs/new.env:lit-token:2",
+  "Lifecycle": {
+   "Status": "in-use",
+   "InUse": true,
+   "FirstSeen": {
+    "Commit": "72c31d7b15b1c7444c68a4f8f8a247505c835cda",
+    "Date": "2020-01-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "766fe5dcc05f1ef366e8075c544ac59be5b121d6",
+    "Date": "2020-03-01T00:00:00Z"
+   },
+   "Commits": 2,
+   "Files": 1,
+   "BranchCount": 1,
+   "TagCount": 0,
+   "MergedBranches": 1,
+   "HistoricalBranches": 0,
+   "HistoryComplete": true
+  }
+ },
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 3,
+  "EndLine": 4,
+  "StartColumn": 8,
+  "EndColumn": 5,
+  "Match": "LCK_AAAA\n1111",
+  "Secret": "LCK_AAAA\n1111",
+  "File": "configs/new.env",
+  "SymlinkFile": "",
+  "Commit": "766fe5dcc05f1ef366e8075c544ac59be5b121d6",
+  "Entropy": 2.4696705,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-03-01T00:00:00Z",
+  "Message": "encoded and split forms",
+  "Tags": [],
+  "Fingerprint": "766fe5dcc05f1ef366e8075c544ac59be5b121d6:configs/new.env:lit-token:3",
+  "Lifecycle": {
+   "Status": "in-use",
+   "InUse": true,
+   "FirstSeen": {
+    "Commit": "72c31d7b15b1c7444c68a4f8f8a247505c835cda",
+    "Date": "2020-01-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "766fe5dcc05f1ef366e8075c544ac59be5b121d6",
+    "Date": "2020-03-01T00:00:00Z"
+   },
+   "Commits": 2,
+   "Files": 1,
+   "BranchCount": 1,
+   "TagCount": 0,
+   "MergedBranches": 1,
+   "HistoricalBranches": 0,
+   "HistoryComplete": true
+  }
+ }
+]

@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/zricethezav/gitleaks/v8/lifecycle"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
@@ -43,6 +44,11 @@ func runDirectory(cmd *cobra.Command, args []string) {
 
 	detector := Detector(cmd, cfg, source)
 
+	session := newLifecycleSession(cmd, lifecycle.KindDirectory, source, "dir")
+	if session != nil {
+		session.attach(detector)
+	}
+
 	// set follow symlinks flag
 	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
 		logging.Fatal().Err(err).Send()
@@ -68,6 +74,10 @@ func runDirectory(cmd *cobra.Command, args []string) {
 
 	if err != nil {
 		logging.Error().Err(err).Msg("failed scan directory")
+	}
+
+	if session != nil {
+		session.finish(cmd.Context(), detector, findings)
 	}
 
 	findingSummaryAndExit(detector, findings, exitCode, start, err)

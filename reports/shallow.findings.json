@@ -1,0 +1,41 @@
+[
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 7,
+  "EndColumn": 18,
+  "Match": "LCK_FFFF6666",
+  "Secret": "LCK_FFFF6666",
+  "File": "app.env",
+  "SymlinkFile": "",
+  "Commit": "f6e12afb1103b0e758faf384d32e62918c321679",
+  "Entropy": 2.251629,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-02-01T00:00:00Z",
+  "Message": "add secret",
+  "Tags": [],
+  "Fingerprint": "f6e12afb1103b0e758faf384d32e62918c321679:app.env:lit-token:1",
+  "Lifecycle": {
+   "Status": "in-use",
+   "InUse": true,
+   "FirstSeen": {
+    "Commit": "f6e12afb1103b0e758faf384d32e62918c321679",
+    "Date": "2020-02-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "f6e12afb1103b0e758faf384d32e62918c321679",
+    "Date": "2020-02-01T00:00:00Z"
+   },
+   "Commits": 1,
+   "Files": 1,
+   "BranchCount": 1,
+   "TagCount": 0,
+   "MergedBranches": 1,
+   "HistoricalBranches": 0,
+   "HistoryComplete": false
+  }
+ }
+]

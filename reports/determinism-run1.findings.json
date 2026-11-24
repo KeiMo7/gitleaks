@@ -1,0 +1,80 @@
+[
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 7,
+  "EndColumn": 18,
+  "Match": "LCK_AAAA1111",
+  "Secret": "LCK_AAAA1111",
+  "File": "a.env",
+  "SymlinkFile": "",
+  "Commit": "2d2cae1da116026a124239475b91677771356e9b",
+  "Entropy": 2.251629,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-01-01T00:00:00Z",
+  "Message": "one",
+  "Tags": [],
+  "Fingerprint": "2d2cae1da116026a124239475b91677771356e9b:a.env:lit-token:1",
+  "Lifecycle": {
+   "Status": "not-in-use",
+   "InUse": false,
+   "FirstSeen": {
+    "Commit": "2d2cae1da116026a124239475b91677771356e9b",
+    "Date": "2020-01-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "2d2cae1da116026a124239475b91677771356e9b",
+    "Date": "2020-01-01T00:00:00Z"
+   },
+   "Commits": 1,
+   "Files": 1,
+   "BranchCount": 1,
+   "TagCount": 0,
+   "MergedBranches": 1,
+   "HistoricalBranches": 0,
+   "HistoryComplete": true
+  }
+ },
+ {
+  "RuleID": "lit-token",
+  "Description": "Literal test token",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 7,
+  "EndColumn": 18,
+  "Match": "LCK_BBBB2222",
+  "Secret": "LCK_BBBB2222",
+  "File": "a.env",
+  "SymlinkFile": "",
+  "Commit": "81aaab46c0341f4ee3893eee996e1ff22386df68",
+  "Entropy": 2.251629,
+  "Author": "Lifecycle E2E",
+  "Email": "lifecycle@example.com",
+  "Date": "2020-02-01T00:00:00Z",
+  "Message": "two",
+  "Tags": [],
+  "Fingerprint": "81aaab46c0341f4ee3893eee996e1ff22386df68:a.env:lit-token:1",
+  "Lifecycle": {
+   "Status": "not-in-use",
+   "InUse": false,
+   "FirstSeen": {
+    "Commit": "81aaab46c0341f4ee3893eee996e1ff22386df68",
+    "Date": "2020-02-01T00:00:00Z"
+   },
+   "LastSeen": {
+    "Commit": "81aaab46c0341f4ee3893eee996e1ff22386df68",
+    "Date": "2020-02-01T00:00:00Z"
+   },
+   "Commits": 1,
+   "Files": 1,
+   "BranchCount": 1,
+   "TagCount": 0,
+   "MergedBranches": 1,
+   "HistoricalBranches": 0,
+   "HistoryComplete": true
+  }
+ }
+]

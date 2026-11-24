@@ -1,0 +1,12 @@
+{
+ "SchemaVersion": 1,
+ "Generator": "gitleaks/lifecycle",
+ "Source": "git",
+ "Repository": {"DefaultBranch":"main","Tip":"766fe5dcc05f1ef366e8075c544ac59be5b121d6","TipDate":"2020-03-01T00:00:00Z","RootCommits":["72c31d7b15b1c7444c68a4f8f8a247505c835cda"],"Shallow":false,"HistoryComplete":true},
+ "History": {"Complete":true},
+ "Diagnostics": {"CommandFailures":0,"CommandTimeouts":0,"RefErrors":0,"ObjectErrors":0,"SkippedLargeBlobs":0,"SkippedLargeFragments":0,"ScanErrors":0,"RefAnalysisLimited":false,"TipScanFailed":false},
+ "Secrets": [
+  {"SecretID":"glsk_wzcf37kckznxev6asbumfkvuh54uth4nvuszjgthjvvcs2gcs3aq","RuleID":"lit-token","Status":"in-use","InUse":true,"FirstSeen":{"Commit":"72c31d7b15b1c7444c68a4f8f8a247505c835cda","Date":"2020-01-01T00:00:00Z"},"LastSeen":{"Commit":"766fe5dcc05f1ef366e8075c544ac59be5b121d6","Date":"2020-03-01T00:00:00Z"},"Commits":2,"Files":1,"BranchCount":1,"TagCount":0,"MergedBranches":1,"HistoricalBranches":0,"HistoryComplete":true,"Refs":[{"Name":"main","Type":"branch","Merged":true,"Tip":"766fe5dcc05f1ef366e8075c544ac59be5b121d6"}],"MergedRefs":["main"],"Locations":[{"Commit":"72c31d7b15b1c7444c68a4f8f8a247505c835cda","Date":"2020-01-01T00:00:00Z","File":"configs/old.env","StartLine":1,"EndLine":1,"StartColumn":7,"EndColumn":18},{"Commit":"766fe5dcc05f1ef366e8075c544ac59be5b121d6","Date":"2020-03-01T00:00:00Z","File":"configs/old.env","StartLine":1,"EndLine":1,"StartColumn":13,"EndColumn":24},{"Commit":"766fe5dcc05f1ef366e8075c544ac59be5b121d6","Date":"2020-03-01T00:00:00Z","File":"configs/old.env","StartLine":2,"EndLine":2,"StartColumn":6,"EndColumn":21},{"Commit":"766fe5dcc05f1ef366e8075c544ac59be5b121d6","Date":"2020-03-01T00:00:00Z","File":"configs/old.env","StartLine":3,"EndLine":4,"StartColumn":8,"EndColumn":5}]}
+ ],
+ "Summary": {"Secrets":1,"Entries":1,"InUse":1,"NotInUse":0,"Unknown":0,"NoHistory":0,"Occurrences":4}
+}

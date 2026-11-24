@@ -1,0 +1,94 @@
+=== RUN   TestCanonicalSecretForms
+=== RUN   TestCanonicalSecretForms/plain_and_trimmed
+=== RUN   TestCanonicalSecretForms/quotes
+=== RUN   TestCanonicalSecretForms/line_split
+=== RUN   TestCanonicalSecretForms/base64_wrapped
+=== RUN   TestCanonicalSecretForms/base64url_wrapped
+=== RUN   TestCanonicalSecretForms/hex_wrapped
+=== RUN   TestCanonicalSecretForms/percent_escaped
+=== RUN   TestCanonicalSecretForms/backslash_escapes
+=== RUN   TestCanonicalSecretForms/escaped_line_break
+=== RUN   TestCanonicalSecretForms/unicode_escape
+--- PASS: TestCanonicalSecretForms (0.00s)
+    --- PASS: TestCanonicalSecretForms/plain_and_trimmed (0.00s)
+    --- PASS: TestCanonicalSecretForms/quotes (0.00s)
+    --- PASS: TestCanonicalSecretForms/line_split (0.00s)
+    --- PASS: TestCanonicalSecretForms/base64_wrapped (0.00s)
+    --- PASS: TestCanonicalSecretForms/base64url_wrapped (0.00s)
+    --- PASS: TestCanonicalSecretForms/hex_wrapped (0.00s)
+    --- PASS: TestCanonicalSecretForms/percent_escaped (0.00s)
+    --- PASS: TestCanonicalSecretForms/backslash_escapes (0.00s)
+    --- PASS: TestCanonicalSecretForms/escaped_line_break (0.00s)
+    --- PASS: TestCanonicalSecretForms/unicode_escape (0.00s)
+=== RUN   TestCanonicalSecretDoesNotOverNormalize
+--- PASS: TestCanonicalSecretDoesNotOverNormalize (0.00s)
+=== RUN   TestHasherRepositoryScoped
+--- PASS: TestHasherRepositoryScoped (0.00s)
+=== RUN   TestHasherPepper
+--- PASS: TestHasherPepper (0.00s)
+=== RUN   TestRepoFingerprintIgnoresCheckoutPath
+--- PASS: TestRepoFingerprintIgnoresCheckoutPath (0.00s)
+=== RUN   TestRemoteURLCredentialsStripped
+--- PASS: TestRemoteURLCredentialsStripped (0.00s)
+=== RUN   TestSpoolGroupsAcrossRuns
+--- PASS: TestSpoolGroupsAcrossRuns (0.01s)
+=== RUN   TestSpoolDedupesExactLocations
+--- PASS: TestSpoolDedupesExactLocations (0.00s)
+=== RUN   TestSpoolRoundTrip
+--- PASS: TestSpoolRoundTrip (0.00s)
+=== RUN   TestSpoolEmptyIsSafe
+--- PASS: TestSpoolEmptyIsSafe (0.00s)
+=== RUN   TestAnalyzerNoHistoryReport
+--- PASS: TestAnalyzerNoHistoryReport (0.00s)
+=== RUN   TestAnalyzerDeterministic
+--- PASS: TestAnalyzerDeterministic (0.01s)
+=== RUN   TestAnalyzerRuleSeparation
+--- PASS: TestAnalyzerRuleSeparation (0.00s)
+=== RUN   TestSpoolMemoryBounded
+--- PASS: TestSpoolMemoryBounded (0.01s)
+=== RUN   TestSpoolMergeBoundedFanIn
+--- PASS: TestSpoolMergeBoundedFanIn (0.09s)
+=== RUN   TestLifecycleCorruptObjectContinues
+--- PASS: TestLifecycleCorruptObjectContinues (0.57s)
+=== RUN   TestLifecycleLogOptsLimitsConclusion
+--- PASS: TestLifecycleLogOptsLimitsConclusion (0.06s)
+=== RUN   TestLifecycleNoFindings
+--- PASS: TestLifecycleNoFindings (0.04s)
+=== RUN   TestLifecycleSameDigestTwoRules
+--- PASS: TestLifecycleSameDigestTwoRules (0.05s)
+=== RUN   TestLifecycleMultipleHitsOneCommit
+--- PASS: TestLifecycleMultipleHitsOneCommit (0.05s)
+=== RUN   TestLifecycleCSVAppendsColumns
+--- PASS: TestLifecycleCSVAppendsColumns (0.06s)
+=== RUN   TestLifecycleStableAcrossReclone
+--- PASS: TestLifecycleStableAcrossReclone (0.10s)
+=== RUN   TestLifecycleAdded
+--- PASS: TestLifecycleAdded (0.06s)
+=== RUN   TestLifecycleRotated
+--- PASS: TestLifecycleRotated (0.06s)
+=== RUN   TestLifecycleDeleted
+--- PASS: TestLifecycleDeleted (0.06s)
+=== RUN   TestLifecycleRenamed
+--- PASS: TestLifecycleRenamed (0.06s)
+=== RUN   TestLifecycleAcrossBranchMerge
+--- PASS: TestLifecycleAcrossBranchMerge (0.09s)
+=== RUN   TestLifecycleUnmergedBranch
+--- PASS: TestLifecycleUnmergedBranch (0.07s)
+=== RUN   TestLifecycleEncodedAndSplit
+--- PASS: TestLifecycleEncodedAndSplit (0.07s)
+=== RUN   TestLifecycleNoHistoryDirectory
+--- PASS: TestLifecycleNoHistoryDirectory (0.01s)
+=== RUN   TestLifecycleShallowClone
+--- PASS: TestLifecycleShallowClone (0.08s)
+=== RUN   TestLifecycleDeterministic
+--- PASS: TestLifecycleDeterministic (0.16s)
+=== RUN   TestReportCompatibility
+--- PASS: TestReportCompatibility (0.09s)
+=== RUN   TestLifecycleSuppressionUnchanged
+--- PASS: TestLifecycleSuppressionUnchanged (0.05s)
+=== RUN   TestLifecycleExitCodeUnchanged
+--- PASS: TestLifecycleExitCodeUnchanged (0.09s)
+=== RUN   TestLifecycleRedactKeepsIdentity
+--- PASS: TestLifecycleRedactKeepsIdentity (0.08s)
+PASS
+ok  	github.com/zricethezav/gitleaks/v8/lifecycle	2.092s

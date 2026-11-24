@@ -103,6 +103,11 @@ type Detector struct {
 	ReportPath string
 	Reporter   report.Reporter
 
+	// Lifecycle optionally records every surviving finding into a disk-backed
+	// spool for lifecycle analysis. It is nil unless enabled, in which case
+	// scan behavior is unchanged.
+	Lifecycle *Lifecycle
+
 	TotalBytes atomic.Uint64
 }
 
@@ -228,6 +233,9 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 		if err != nil {
 			// Log the error and move on to the next fragment
 			logger.Error().Err(err).Send()
+			if d.Lifecycle != nil {
+				d.Lifecycle.NoteScanError()
+			}
 			return nil
 		}
 
@@ -361,6 +369,15 @@ ScanLoop:
 			if len(encodedSegments) == 0 {
 				break ScanLoop
 			}
+		}
+	}
+
+	if d.Lifecycle != nil {
+		// Capture the lifecycle identity while the secret is still unredacted.
+		// It rides on the finding (and is never serialized) so no per-finding
+		// state accumulates in the detector.
+		for i := range findings {
+			findings[i].LifecycleSecretID = d.Lifecycle.Digest(findings[i].Secret, findings[i].File)
 		}
 	}
 
@@ -746,6 +763,19 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		printFinding(finding, d.NoColor)
 	}
 	d.findingMutex.Unlock()
+
+	// Record only findings that survived suppression, baselines and
+	// fingerprints, so the lifecycle view has the same suppression semantics
+	// as the primary report.
+	if d.Lifecycle != nil {
+		id := finding.LifecycleSecretID
+		if id == "" {
+			id = d.Lifecycle.Digest(finding.Secret, finding.File)
+		}
+		if err := d.Lifecycle.Record(finding, id); err != nil {
+			logging.Debug().Err(err).Msg("lifecycle: could not record finding")
+		}
+	}
 }
 
 // Findings returns the findings added to the detector
