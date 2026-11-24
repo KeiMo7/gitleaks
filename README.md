@@ -131,7 +131,7 @@ Available Commands:
   version     display gitleaks version
 
 Flags:
-  -b, --baseline-path string          path to baseline with issues that can be ignored
+  -b, --baseline-path strings         path to a baseline report (json, csv, sarif or junit); repeat or use commas to merge several sources
   -c, --config string                 config file path
                                       order of precedence:
                                       1. --config/-c
@@ -191,19 +191,29 @@ You can also stream data to gitleaks with the `stdin` command. Example: `cat som
 ### Creating a baseline
 
 When scanning large repositories or repositories with a long history, it can be convenient to use a baseline. When using a baseline,
-gitleaks will ignore any old findings that are present in the baseline. A baseline can be any gitleaks report. To create a gitleaks report, run gitleaks with the `--report-path` parameter.
+gitleaks will ignore any old findings that are present in the baseline. A baseline can be **any** structured gitleaks report — JSON array, CSV table, SARIF or JUnit XML — regardless of the file extension; the format is detected from the content. To create a gitleaks report, run gitleaks with the `--report-path` parameter.
 
 ```
 gitleaks git --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
 ```
 
-Once as baseline is created it can be applied when running the detect command again:
+Once a baseline is created it can be applied when running the detect command again:
 
 ```
 gitleaks git --baseline-path gitleaks-report.json --report-path findings.json
 ```
 
 After running the detect command with the --baseline-path parameter, report output (findings.json) will only contain new issues.
+
+Several baseline sources can be supplied at once, in any format; they are merged in an order-independent way:
+
+```
+gitleaks dir . -b old.json -b ci-report.sarif -b last-run.csv
+# or: -b old.json,ci-report.sarif
+```
+
+Entries are matched on their stable, format-independent coordinates — rule id, normalized file/location and visible content — so reworded rule descriptions, reordered tags, float entropy noise, different date encodings, relative/absolute/`./`/backslash path forms and redacted reports do not reopen historical findings. Fully redacted entries match by rule and location only, partially redacted entries by their visible prefix, and unredacted entries by full content. Baseline files are always excluded from the scan. An unreadable or unrecognized baseline (including custom-template text) fails the run with a non-zero exit code and names the offending input instead of silently running without a baseline.
+
 
 ## Pre-Commit hook
 

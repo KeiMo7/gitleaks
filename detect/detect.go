@@ -90,8 +90,13 @@ type Detector struct {
 	// a list of known findings that should be ignored
 	baseline []report.Finding
 
-	// path to baseline
+	// path to baseline (retained for the single-baseline contract and
+	// direct struct use in tests)
 	baselinePath string
+
+	// absolute/resolved paths of every configured baseline source; each one
+	// is excluded from scanning
+	baselineAbs []string
 
 	// gitleaksIgnore
 	gitleaksIgnore map[string]struct{}
@@ -292,8 +297,9 @@ func (d *Detector) DetectContext(ctx context.Context, fragment Fragment) []repor
 
 	// check if filepath is allowed
 	if fragment.FilePath != "" {
-		// is the path our config or baseline file?
-		if fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath) {
+		// is the path our config or one of our baseline files?
+		if fragment.FilePath == d.Config.Path || d.isBaselineFragment(fragment.FilePath) ||
+			(fragment.WindowsFilePath != "" && d.isBaselineFragment(fragment.WindowsFilePath)) {
 			logging.Trace().Msg("skipping file: matches config or baseline path")
 			return findings
 		}
@@ -509,7 +515,8 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		}
 		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
 			logger.Trace().
-				Str("finding", finding.Secret).
+				Str("rule-id", finding.RuleID).
+				Int("start-line", finding.StartLine).
 				Msg("skipping finding: 'gitleaks:allow' signature")
 			continue
 		}
@@ -546,7 +553,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			// entropy is too low, skip this finding
 			if entropy <= r.Entropy {
 				logger.Trace().
-					Str("finding", finding.Secret).
+					Str("rule-id", finding.RuleID).
 					Float32("entropy", finding.Entropy).
 					Msg("skipping finding: low entropy")
 				continue
@@ -716,8 +723,15 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		finding.Fingerprint = globalFingerprint
 	}
 
-	// check if we should ignore this finding
-	logger := logging.With().Str("finding", finding.Secret).Logger()
+	// check if we should ignore this finding.
+	//
+	// Security: never attach finding.Secret/Match to the logger context, not
+	// even at trace level; log rule id and location only.
+	logger := logging.With().
+		Str("rule-id", finding.RuleID).
+		Str("file", finding.File).
+		Int("start-line", finding.StartLine).
+		Logger()
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
 		logger.Debug().
 			Str("fingerprint", globalFingerprint).
@@ -870,7 +884,7 @@ func checkFindingAllowed(
 
 		if isAllowed {
 			event := logger.Trace().
-				Str("finding", finding.Secret).
+				Str("rule-id", finding.RuleID).
 				Str("condition", a.MatchCondition.String())
 			if commitAllowed {
 				event.Str("allowed-commit", commit)

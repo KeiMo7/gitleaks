@@ -77,7 +77,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file (use \"-\" for stdout)")
 	rootCmd.PersistentFlags().StringP("report-format", "f", "", "output format (json, csv, junit, sarif, template)")
 	rootCmd.PersistentFlags().StringP("report-template", "", "", "template file used to generate the report (implies --report-format=template)")
-	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
+	rootCmd.PersistentFlags().StringSliceP("baseline-path", "b", []string{}, "path to a baseline report (json, csv, sarif or junit); may be specified multiple times or as a comma-separated list to merge sources")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
 	rootCmd.PersistentFlags().BoolP("no-color", "", false, "turn off color for verbose output")
@@ -320,12 +320,14 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		}
 	}
 
-	// ignore findings from the baseline (an existing report in json format generated earlier)
-	baselinePath, _ := cmd.Flags().GetString("baseline-path")
-	if baselinePath != "" {
-		err = detector.AddBaseline(baselinePath, source)
-		if err != nil {
-			logging.Error().Msgf("Could not load baseline. The path must point of a gitleaks report generated using the default format: %s", err)
+	// ignore findings from one or more baselines. Any gitleaks report
+	// format (json array, csv, sarif, junit) is accepted and sources are
+	// merged. A baseline that cannot be imported is a hard failure: running
+	// without it would silently re-open all baselined findings.
+	baselinePaths, _ := cmd.Flags().GetStringSlice("baseline-path")
+	if len(baselinePaths) > 0 {
+		if err = detector.AddBaselines(baselinePaths, source); err != nil {
+			logging.Fatal().Msgf("Could not load baseline source(s); every input must be a valid gitleaks report (json, csv, sarif or junit). %s", err)
 		}
 	}
 

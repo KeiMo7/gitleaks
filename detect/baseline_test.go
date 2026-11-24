@@ -160,12 +160,16 @@ func TestFileLoadBaseline(t *testing.T) {
 		ExpectedError error
 	}{
 		{
+			// Content sniffing accepts comma separated reports regardless of
+			// the .csv extension; this fixture has a gitleaks-style header.
 			Filename:      "../testdata/baseline/baseline.csv",
-			ExpectedError: errors.New("the format of the file ../testdata/baseline/baseline.csv is not supported"),
+			ExpectedError: nil,
 		},
 		{
+			// SARIF documents are accepted as baselines; this one contains
+			// an empty run set.
 			Filename:      "../testdata/baseline/baseline.sarif",
-			ExpectedError: errors.New("the format of the file ../testdata/baseline/baseline.sarif is not supported"),
+			ExpectedError: nil,
 		},
 		{
 			Filename:      "../testdata/baseline/notfound.json",
