@@ -22,9 +22,34 @@ var (
 	// use to keep track of how many configs we can extend
 	// yea I know, globals bad
 	extendDepth int
+
+	// allowlistOrdinal is a process-global counter assigning a stable ordinal
+	// and ID to every allowlist as it is parsed. It is reset at the start of
+	// every top-level Translate() call so the same configuration always
+	// resolves to the same IDs regardless of map iteration or rule traversal.
+	allowlistOrdinal int
 )
 
 const maxExtendDepth = 2
+
+// nextAllowlistStamp assigns the next stable identity record. Stamps are
+// created in parse order so declaration order and in-layer position are
+// recoverable from the ordinal.
+func nextAllowlistStamp(layer AllowlistLayer, scope AllowlistScope, kind string, index int, configPath, ruleID string, targetRules []string) *AllowlistStamp {
+	ordinal := allowlistOrdinal
+	allowlistOrdinal++
+	return &AllowlistStamp{
+		ID:          fmt.Sprintf("AL-%04d", ordinal+1),
+		Ordinal:     ordinal,
+		Layer:       layer,
+		Scope:       scope,
+		ConfigPath:  configPath,
+		Kind:        kind,
+		Index:       index,
+		RuleID:      ruleID,
+		TargetRules: targetRules,
+	}
+}
 
 // ViperConfig is the config struct used by the Viper config package
 // to parse the config file. This struct does not include regular expressions.
@@ -59,8 +84,14 @@ type ViperConfig struct {
 
 	MinVersion string
 
+	// configPath is the file the ViperConfig was loaded from, set for
+	// extension translations. The embedded default config uses DefaultConfigPath.
 	configPath string
 }
+
+// DefaultConfigPath is the synthetic location reported for allowlists declared
+// in the embedded built-in default config.
+const DefaultConfigPath = "<default>"
 
 type viperRequired struct {
 	ID            string
@@ -95,6 +126,10 @@ type Config struct {
 	OrderedRules []string
 	Allowlists   []*Allowlist
 	MinVersion   string
+
+	// LoadConflicts holds structured, content-free conflict records detected
+	// during translation. They are surfaced through the adjudication report.
+	LoadConflicts []LoadConflict
 }
 
 // Extend is a struct that allows users to define how they want their
@@ -107,6 +142,14 @@ type Extend struct {
 }
 
 func (vc *ViperConfig) Translate() (Config, error) {
+	// The ordinal counter is per resolved configuration: a top-level
+	// Translate() call (and every recursive extension translation it
+	// triggers) shares one numbering space, but distinct configurations
+	// start again from zero.
+	if extendDepth == 0 {
+		allowlistOrdinal = 0
+	}
+
 	var (
 		keywords       = make(map[string]struct{})
 		orderedRules   []string
@@ -158,11 +201,32 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			}
 			vr.Allowlists = append(vr.Allowlists, vr.AllowList)
 		}
-		for _, a := range vr.Allowlists {
+		// Rule-layer allowlists always carry the rule provenance layer,
+		// regardless of whether the owning rule was declared in the top
+		// config or an extension file. Global/targeted global allowlists use
+		// the file's provenance layer via currentAllowlistLayer().
+		ruleLayer := AllowlistLayerRule
+		for idx, a := range vr.Allowlists {
 			allowlist, err := vc.parseAllowlist(a)
 			if err != nil {
-				return Config{}, fmt.Errorf("%s: [[rules.allowlists]] %w", cr.RuleID, err)
+				kind := "allowlists"
+				if vr.AllowList != nil && len(vr.Allowlists) == 1 {
+					kind = "allowlist"
+				}
+				return Config{}, fmt.Errorf("%s: [[rules.allowlists]] %w", cr.RuleID, &AllowlistLoadError{
+					Code:       loadCodeFor(err),
+					EntryIndex: idx,
+					Kind:       kind,
+					ConfigPath: vc.configDisplayName(),
+					RuleID:     cr.RuleID,
+					Err:        err,
+				})
 			}
+			kind := "allowlists"
+			if idx == len(vr.Allowlists)-1 && vr.AllowList != nil && len(vr.Allowlists) == 1 {
+				kind = "allowlist"
+			}
+			allowlist.Stamp = nextAllowlistStamp(ruleLayer, AllowlistScopeTargeted, kind, idx, vc.configDisplayName(), cr.RuleID, nil)
 			cr.Allowlists = append(cr.Allowlists, allowlist)
 		}
 
@@ -225,11 +289,31 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		}
 		vc.Allowlists = append(vc.Allowlists, vc.AllowList)
 	}
-	for _, a := range vc.Allowlists {
+	layer := vc.currentAllowlistLayer()
+	for idx, a := range vc.Allowlists {
 		allowlist, err := vc.parseAllowlist(&a.viperRuleAllowlist)
 		if err != nil {
-			return Config{}, fmt.Errorf("[[allowlists]] %w", err)
+			kind := "allowlists"
+			if vc.AllowList != nil && len(vc.Allowlists) == 1 {
+				kind = "allowlist"
+			}
+			return Config{}, fmt.Errorf("[[allowlists]] %w", &AllowlistLoadError{
+				Code:       loadCodeFor(err),
+				EntryIndex: idx,
+				Kind:       kind,
+				ConfigPath: vc.configDisplayName(),
+				Err:        err,
+			})
 		}
+		kind := "allowlists"
+		if idx == len(vc.Allowlists)-1 && vc.AllowList != nil && len(vc.Allowlists) == 1 {
+			kind = "allowlist"
+		}
+		scope := AllowlistScopeGlobal
+		if len(a.TargetRules) > 0 {
+			scope = AllowlistScopeTargeted
+		}
+		allowlist.Stamp = nextAllowlistStamp(layer, scope, kind, idx, vc.configDisplayName(), "", a.TargetRules)
 		// Allowlists with |targetRules| aren't added to the global list.
 		if len(a.TargetRules) > 0 {
 			for _, ruleID := range a.TargetRules {
@@ -270,7 +354,32 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		for ruleID, allowlists := range ruleAllowlists {
 			rule, ok := c.Rules[ruleID]
 			if !ok {
-				return Config{}, fmt.Errorf("[[allowlists]] target rule ID '%s' does not exist", ruleID)
+				// Record the structured conflict (with stable code and the
+				// allowlist identities) and fail hard: a targeted allowlist
+				// pointing at a missing rule makes the config unusable. The
+				// error message remains byte-identical for compatibility.
+				structured := &UnknownTargetRuleError{
+					Code:         ConflictUnknownRule,
+					TargetRuleID: ruleID,
+				}
+				for _, al := range allowlists {
+					if al.Stamp != nil {
+						structured.AllowlistIDs = append(structured.AllowlistIDs, al.Stamp.ID)
+						structured.Layers = append(structured.Layers, al.Stamp.Layer.String())
+						structured.ConfigPaths = append(structured.ConfigPaths, al.Stamp.ConfigPath)
+						c.LoadConflicts = append(c.LoadConflicts, LoadConflict{
+							Code:         ConflictUnknownRule,
+							AllowlistID:  al.Stamp.ID,
+							Layer:        al.Stamp.Layer.String(),
+							ConfigPath:   al.Stamp.ConfigPath,
+							TargetRuleID: ruleID,
+							Detail:       "targeted allowlist points at a rule that does not exist",
+						})
+					}
+				}
+				structured.Layers = dedupe(structured.Layers)
+				structured.ConfigPaths = dedupe(structured.ConfigPaths)
+				return Config{}, structured
 			}
 			rule.Allowlists = append(rule.Allowlists, allowlists...)
 			c.Rules[ruleID] = rule
@@ -313,6 +422,39 @@ func validateMinVersion(minVer string, configPath string) error {
 	}
 
 	return nil
+}
+
+// currentAllowlistLayer maps the translation depth and source to the
+// provenance layer. The top-level user config is the global layer;
+// translations triggered by extend.path are the extension layer; the embedded
+// default config pulled in via extend.useDefault is the builtin layer.
+func (vc *ViperConfig) currentAllowlistLayer() AllowlistLayer {
+	if extendDepth == 0 {
+		return AllowlistLayerGlobal
+	}
+	if vc.configPath == DefaultConfigPath {
+		return AllowlistLayerBuiltin
+	}
+	return AllowlistLayerExtension
+}
+
+// configDisplayName returns a stable, human-pointable location for the
+// configuration currently being translated. The embedded default config is
+// reported as "<default>" rather than an empty path.
+func (vc *ViperConfig) configDisplayName() string {
+	if vc.configPath == DefaultConfigPath {
+		return DefaultConfigPath
+	}
+	if vc.configPath != "" {
+		return vc.configPath
+	}
+	if used := viper.ConfigFileUsed(); used != "" {
+		return used
+	}
+	if extendDepth > 0 {
+		return DefaultConfigPath
+	}
+	return "<inline>"
 }
 
 func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
@@ -382,6 +524,7 @@ func (c *Config) extendDefault(parent *ViperConfig) error {
 	if err := viper.Unmarshal(&defaultViperConfig); err != nil {
 		return fmt.Errorf("failed to load extended default config, err: %w", err)
 	}
+	defaultViperConfig.configPath = DefaultConfigPath
 	cfg, err := defaultViperConfig.Translate()
 	if err != nil {
 		return fmt.Errorf("failed to load extended default config, err: %w", err)

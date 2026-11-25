@@ -103,6 +103,15 @@ type Detector struct {
 	ReportPath string
 	Reporter   report.Reporter
 
+	// AdjudicationPath, when non-empty, enables the structured allowlist
+	// adjudication record. It is opt-in: when empty the scan path is
+	// unchanged.
+	AdjudicationPath string
+
+	// adjudicator collects per-candidate adjudications. It is lazily created
+	// when adjudication is enabled.
+	adjudicator *Adjudicator
+
 	TotalBytes atomic.Uint64
 }
 
@@ -299,7 +308,15 @@ func (d *Detector) DetectContext(ctx context.Context, fragment Fragment) []repor
 		}
 	}
 	// check if commit or filepath is allowed.
-	if isAllowed, event := checkCommitOrPathAllowed(logger, fragment, d.Config.Allowlists); isAllowed {
+	if d.adjudicationEnabled() {
+		if d.adjudicateFile(logger, fragment, d.Config.Allowlists, stageFileScope("global", "")) {
+			logging.Trace().
+				Str("path", fragment.FilePath).
+				Str("scope", "global").
+				Msg("skipping file: global allowlist (adjudicated)")
+			return findings
+		}
+	} else if isAllowed, event := checkCommitOrPathAllowed(logger, fragment, d.Config.Allowlists); isAllowed {
 		event.Msg("skipping file: global allowlist")
 		return findings
 	}
@@ -384,8 +401,22 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		return findings
 	}
 
-	// check if commit or file is allowed for this rule.
-	if isAllowed, event := checkCommitOrPathAllowed(logger, fragment, r.Allowlists); isAllowed {
+	// check if commit or file is allowed for this rule. In adjudication mode
+	// the global list set is included so every hitter appears in the total
+	// order; the global set has already been evaluated once at fragment entry.
+	if d.adjudicationEnabled() {
+		combined := make([]*config.Allowlist, 0, len(d.Config.Allowlists)+len(r.Allowlists))
+		combined = append(combined, d.Config.Allowlists...)
+		combined = append(combined, r.Allowlists...)
+		if d.adjudicateFile(logger, fragment, combined, stageFileScope("combined", r.RuleID)) {
+			logging.Trace().
+				Str("path", fragment.FilePath).
+				Str("rule-id", r.RuleID).
+				Str("scope", "combined").
+				Msg("skipping file: allowlist (adjudicated)")
+			return findings
+		}
+	} else if isAllowed, event := checkCommitOrPathAllowed(logger, fragment, r.Allowlists); isAllowed {
 		event.Msg("skipping file: rule allowlist")
 		return findings
 	}
@@ -508,9 +539,16 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			finding.Message = fragment.CommitInfo.Message
 		}
 		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
-			logger.Trace().
-				Str("finding", finding.Secret).
-				Msg("skipping finding: 'gitleaks:allow' signature")
+			d.CountInlineCommentSuppression()
+			if d.adjudicationEnabled() {
+				logger.Trace().
+					Str("rule-id", r.RuleID).
+					Msg("skipping finding: 'gitleaks:allow' signature")
+			} else {
+				logger.Trace().
+					Str("finding", d.loggableSecret(finding.Secret)).
+					Msg("skipping finding: 'gitleaks:allow' signature")
+			}
 			continue
 		}
 
@@ -546,23 +584,36 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			// entropy is too low, skip this finding
 			if entropy <= r.Entropy {
 				logger.Trace().
-					Str("finding", finding.Secret).
+					Str("finding", d.loggableSecret(finding.Secret)).
 					Float32("entropy", finding.Entropy).
 					Msg("skipping finding: low entropy")
 				continue
 			}
 		}
 
-		// check if the result matches any of the global allowlists.
-		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, d.Config.Allowlists); isAllowed {
-			event.Msg("skipping finding: global allowlist")
-			continue
-		}
+		// check if the result matches any allowlist. In adjudication mode the
+		// global and rule list sets are evaluated together so every hitter is
+		// captured in the total order; the suppression verdict stays the
+		// legacy-equivalent union of the two list sets.
+		if d.adjudicationEnabled() {
+			combined := make([]*config.Allowlist, 0, len(d.Config.Allowlists)+len(r.Allowlists))
+			combined = append(combined, d.Config.Allowlists...)
+			combined = append(combined, r.Allowlists...)
+			if d.adjudicateFinding(logger, finding, fragment, currentLine, combined, "combined", r.RuleID) {
+				continue
+			}
+		} else {
+			// check if the result matches any of the global allowlists.
+			if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, d.Config.Allowlists, d.Redact); isAllowed {
+				event.Msg("skipping finding: global allowlist")
+				continue
+			}
 
-		// check if the result matches any of the rule allowlists.
-		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, r.Allowlists); isAllowed {
-			event.Msg("skipping finding: rule allowlist")
-			continue
+			// check if the result matches any of the rule allowlists.
+			if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, r.Allowlists, d.Redact); isAllowed {
+				event.Msg("skipping finding: rule allowlist")
+				continue
+			}
 		}
 		findings = append(findings, finding)
 	}
@@ -717,8 +768,9 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	}
 
 	// check if we should ignore this finding
-	logger := logging.With().Str("finding", finding.Secret).Logger()
+	logger := logging.With().Str("finding", d.loggableSecret(finding.Secret)).Logger()
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
+		d.CountGitleaksIgnoreSuppression()
 		logger.Debug().
 			Str("fingerprint", globalFingerprint).
 			Msg("skipping finding: global fingerprint")
@@ -726,6 +778,7 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
 		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
+			d.CountGitleaksIgnoreSuppression()
 			logger.Debug().
 				Str("fingerprint", finding.Fingerprint).
 				Msgf("skipping finding: fingerprint")
@@ -734,6 +787,7 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	}
 
 	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {
+		d.CountBaselineSuppression()
 		logger.Debug().
 			Str("fingerprint", finding.Fingerprint).
 			Msgf("skipping finding: baseline")
@@ -826,6 +880,7 @@ func checkFindingAllowed(
 	fragment Fragment,
 	currentLine string,
 	allowlists []*config.Allowlist,
+	redact uint,
 ) (bool, *zerolog.Event) {
 	for _, a := range allowlists {
 		allowlistTarget := finding.Secret
@@ -870,7 +925,7 @@ func checkFindingAllowed(
 
 		if isAllowed {
 			event := logger.Trace().
-				Str("finding", finding.Secret).
+				Str("finding", maskForLog(finding.Secret, redact)).
 				Str("condition", a.MatchCondition.String())
 			if commitAllowed {
 				event.Str("allowed-commit", commit)

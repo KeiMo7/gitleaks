@@ -109,6 +109,27 @@ func createScmLink(remote *sources.RemoteInfo, finding report.Finding) string {
 	}
 }
 
+// maskForLog applies report-equivalent masking to a secret for log output. It
+// is a no-op when redaction is disabled so the default log contract is
+// unchanged.
+func maskForLog(secret string, redact uint) string {
+	if redact == 0 || secret == "" {
+		return secret
+	}
+	f := report.Finding{Secret: secret}
+	f.Redact(redact)
+	return f.Secret
+}
+
+// loggableSecret returns a representation of the secret safe to put in a log
+// field. It is a no-op unless redaction is enabled (--redact > 0), so the
+// default log contract is unchanged; when enabled it applies the same masking
+// as the report redaction, guaranteeing no raw secret reaches the logs even
+// at the highest log level.
+func (d *Detector) loggableSecret(secret string) string {
+	return maskForLog(secret, d.Redact)
+}
+
 // shannonEntropy calculates the entropy of data using the formula defined here:
 // https://en.wiktionary.org/wiki/Shannon_entropy
 // Another way to think about what this is doing is calculating the number of bits

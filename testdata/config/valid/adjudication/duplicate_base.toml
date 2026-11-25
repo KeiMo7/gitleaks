@@ -1,0 +1,10 @@
+title = "duplicate extension base"
+
+[[rules]]
+    id = "dup-extension-rule"
+    regex = '''AKIALALEMEL33243EXT'''
+    tags = ["dup"]
+
+[[allowlists]]
+    description = "duplicate global allowlist (extension source)"
+    paths = ['''vendor/''']

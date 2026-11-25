@@ -77,6 +77,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file (use \"-\" for stdout)")
 	rootCmd.PersistentFlags().StringP("report-format", "f", "", "output format (json, csv, junit, sarif, template)")
 	rootCmd.PersistentFlags().StringP("report-template", "", "", "template file used to generate the report (implies --report-format=template)")
+	rootCmd.PersistentFlags().String("adjudication-path", "", "write the structured allowlist adjudication record (JSON) to this path; opt-in, does not change the main report")
 	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
@@ -405,6 +406,26 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		detector.Reporter = reporter
 	}
 
+	// Opt-in structured allowlist adjudication record.
+	adjudicationPath, err := cmd.Flags().GetString("adjudication-path")
+	if err != nil {
+		logging.Fatal().Err(err).Msg("could not get adjudication path")
+	}
+	if adjudicationPath != "" {
+		// Validate writability up front, mirroring the report path handling,
+		// so an unusable path fails the scan rather than silently skipping.
+		if f, err := os.Create(adjudicationPath); err != nil {
+			logging.Fatal().Err(err).Msgf("Adjudication path is not writable: %s", adjudicationPath)
+		} else {
+			_ = f.Close()
+			_ = os.Remove(adjudicationPath)
+		}
+		if ext := filepath.Ext(adjudicationPath); ext != "" && ext != ".json" {
+			logging.Fatal().Msg(detect.ErrAdjudicationFormat.Error())
+		}
+		detector.AdjudicationPath = adjudicationPath
+	}
+
 	return detector
 }
 
@@ -487,6 +508,14 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 	ReportEnd:
 		if reportErr != nil {
 			logging.Fatal().Err(reportErr).Msg("failed to write report")
+		}
+	}
+
+	// write the structured adjudication record once, at finalize. A failure
+	// here is fatal: the scan must not silently run without its record.
+	if detector.AdjudicationPath != "" {
+		if err := detect.WriteAdjudicationReport(detector); err != nil {
+			logging.Fatal().Err(err).Msg("failed to write adjudication record")
 		}
 	}
 

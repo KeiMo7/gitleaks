@@ -617,6 +617,10 @@ func testTranslate(t *testing.T, test translateCase) {
 	opts := cmp.Options{
 		cmp.Comparer(regexComparer),
 		cmpopts.IgnoreUnexported(Rule{}, Allowlist{}),
+		// Stamps carry provenance metadata assigned by the new adjudication
+		// machinery and are covered by dedicated tests; ignore them in the
+		// legacy translation assertions.
+		cmpopts.IgnoreFields(Allowlist{}, "Stamp"),
 	}
 	if diff := cmp.Diff(test.cfg.Title, cfg.Title); diff != "" {
 		t.Errorf("%s diff: (-want +got)\n%s", test.cfgName, diff)

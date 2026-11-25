@@ -1,0 +1,15 @@
+title = "duplicate top"
+
+[extend]
+path = "duplicate_base.toml"
+
+[[rules]]
+    id = "dup-rule"
+    regex = '''AKIALALEMEL33243OLIA'''
+    tags = ["dup"]
+
+# The same signature as the extension-layer global allowlist, but declared in
+# a different source file.
+[[allowlists]]
+    description = "duplicate global allowlist (top source)"
+    paths = ['''vendor/''']

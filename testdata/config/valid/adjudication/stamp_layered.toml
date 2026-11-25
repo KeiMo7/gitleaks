@@ -1,0 +1,21 @@
+title = "stamp layered"
+
+[extend]
+path = "stamp_base.toml"
+
+[[rules]]
+    id = "stamp-rule"
+    regex = '''AKIALALEMEL33243OLIA'''
+    tags = ["stamp"]
+    [[rules.allowlists]]
+        description = "top rule-layer allowlist"
+        stopwords = ["olia"]
+
+[[allowlists]]
+    description = "top global allowlist"
+    paths = ['''README\.md''']
+
+[[allowlists]]
+    description = "top targeted allowlist"
+    targetRules = ["stamp-rule"]
+    regexes = ['''AKIALALEMEL33243OLIA''']

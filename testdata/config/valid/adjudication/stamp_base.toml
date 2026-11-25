@@ -1,0 +1,18 @@
+title = "stamp extension base"
+
+[[rules]]
+    id = "stamp-extension-rule"
+    regex = '''AKIALALEMEL33243EXT'''
+    tags = ["stamp"]
+    [[rules.allowlists]]
+        description = "extension rule-layer allowlist"
+        stopwords = ["ext"]
+
+[[allowlists]]
+    description = "extension global allowlist"
+    paths = ['''vendor/''']
+
+[[allowlists]]
+    description = "extension targeted allowlist"
+    targetRules = ["stamp-extension-rule"]
+    stopwords = ["extword"]
